@@ -1,0 +1,16 @@
+{
+  "name": "karma-street",
+  "version": "0.0.0",
+  "main": "src/main.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "devvit playtest KarmaStreetTest",
+    "upload": "devvit upload"
+  },
+  "dependencies": {
+    "@devvit/public-api": "^0.10.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5"
+  }
+}
