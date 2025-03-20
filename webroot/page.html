@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Karma Street Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Karma Street Dashboard</h1>
+      <div class="stats-box">
+        <h2>Welcome, <span id="username">Guest</span>!</h2>
+        <p id="message">Connecting to Karma Street...</p>
+        <div class="counter-display">
+          <span>Current Score: </span>
+          <span id="counter">0</span>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button id="sendMessage">Update Score</button>
+        <button id="viewTrades">View Trades</button>
+      </div>
+
+      <div class="portfolio-summary">
+        <h3>Portfolio Summary</h3>
+        <div id="portfolio-data">Loading portfolio data...</div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
