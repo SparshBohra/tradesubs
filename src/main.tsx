@@ -35,74 +35,65 @@ Devvit.addCustomPostType({
         try {
           switch (message.type) {
             case "webViewReady": {
-                const username = await context.reddit.getCurrentUsername();
-                const portfolio = await getUserPortfolio(context, username);
-                const tradeHistory = await getTradeHistory(context, username);
-                
-                webView.postMessage({
-                    type: "initialData",
-                    data: {
-                        username,
-                        portfolio,
-                        tradeHistory
-                    }
-                });
-                break;
+              const username = await context.reddit.getCurrentUsername();
+              const portfolio = await getUserPortfolio(context, username);
+              const tradeHistory = await getTradeHistory(context, username);
+
+              webView.postMessage({
+                type: "initialData",
+                data: {
+                  username,
+                  portfolio,
+                  tradeHistory,
+                },
+              });
+              break;
             }
             case "buyStock": {
-                const result = await buyStock(
-                    context,
-                    username,
-                    message.data.subreddit ?? "",
-                    message.data.amount
-                );
-                const updatedPortfolio = await getUserPortfolio(context, username);
-                const updatedHistory = await getTradeHistory(context, username);
-                setPortfolio(updatedPortfolio);
-                webView.postMessage({
-                    type: "updatePortfolio",
-                    data: { 
-                        portfolio: updatedPortfolio,
-                        trade: result.trade,
-                        tradeHistory: updatedHistory
-                    },
-                });
-                break;
+              const result = await buyStock(
+                context,
+                username,
+                message.data.subreddit ?? "",
+                message.data.amount
+              );
+              const updatedPortfolio = await getUserPortfolio(
+                context,
+                username
+              );
+              const updatedHistory = await getTradeHistory(context, username);
+              setPortfolio(updatedPortfolio);
+              webView.postMessage({
+                type: "updatePortfolio",
+                data: {
+                  portfolio: updatedPortfolio,
+                  trade: result.trade,
+                  tradeHistory: updatedHistory,
+                },
+              });
+              break;
             }
-            
+
             case "sellStock": {
-                const result = await sellStock(
-                    context,
-                    username,
-                    message.data.subreddit,
-                    message.data.amount
-                );
-                const latestPortfolio = await getUserPortfolio(context, username);
-                const updatedHistory = await getTradeHistory(context, username);
-                setPortfolio(latestPortfolio);
-                webView.postMessage({
-                    type: "updatePortfolio",
-                    data: { 
-                        portfolio: latestPortfolio,
-                        trade: result.trade,
-                        tradeHistory: updatedHistory
-                    },
-                });
-                break;
-            }
-              await sellStock(
+              const result = await sellStock(
                 context,
                 username,
                 message.data.subreddit,
                 message.data.amount
               );
               const latestPortfolio = await getUserPortfolio(context, username);
+              const updatedHistory = await getTradeHistory(context, username);
               setPortfolio(latestPortfolio);
               webView.postMessage({
                 type: "updatePortfolio",
-                data: { portfolio: latestPortfolio },
+                data: {
+                  portfolio: latestPortfolio,
+                  trade: result.trade,
+                  tradeHistory: updatedHistory,
+                },
               });
               break;
+            }
+
             case "getStockPrice":
               const price = await calculateStockPrice(
                 context,
