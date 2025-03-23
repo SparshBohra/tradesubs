@@ -58,24 +58,25 @@ class App {
     this.#handleTrade = (action) => {
       const subreddit = this.subredditInput.value.trim();
       const amount = parseInt(this.amountInput.value);
+      const tradePrice = this.currentPrice; // Capture the current price at trade time
 
       if (!subreddit || isNaN(amount) || amount <= 0) {
         this.messageElement.textContent = 'Please enter valid subreddit and amount';
         return;
       }
 
-      if (!this.currentPrice) {
+      if (!tradePrice) {
         this.messageElement.textContent = 'Please wait for price data to load';
         return;
       }
 
-      this.messageElement.textContent = `Processing ${action} order...`;
+      this.messageElement.textContent = `Processing ${action} order at $${tradePrice.toFixed(2)}...`;
       postWebViewMessage({
         type: action === 'buy' ? 'buyStock' : 'sellStock',
         data: { 
           subreddit, 
           amount,
-          price: this.currentPrice,
+          price: tradePrice, // Use the captured price
           stockData: this.currentStockData
         }
       });
@@ -168,7 +169,7 @@ class App {
     
     try {
       this.currentStockData = stockData;
-      // Ensure price is set correctly
+      // Ensure price is set correctly and store it
       this.currentPrice = Number(stockData.price) || Number((stockData.karma / 100) * (1 + stockData.engagement));
       
       if (isNaN(this.currentPrice) || this.currentPrice <= 0) {
@@ -185,11 +186,18 @@ class App {
         return;
       }
 
+      // Enable trading buttons when we have a valid price
+      this.buyButton.disabled = false;
+      this.sellButton.disabled = false;
+
       stockInfo.innerHTML = `
         <div class="stock-metrics">
           <div class="stock-price ${priceChange < 0 ? 'decrease' : ''}">
             $${this.currentPrice.toFixed(2)}
             ${priceChange !== 0 ? ` (${priceChange > 0 ? '+' : ''}${priceChange.toFixed(2)})` : ''}
+          </div>
+          <div id="trade-price" class="trade-price">
+            Trading Price: $${this.currentPrice.toFixed(2)}
           </div>
           <div class="stock-metrics-grid">
             <div class="metric-item">

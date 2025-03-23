@@ -31,11 +31,14 @@
           <input type="number" id="amount" placeholder="Enter amount" min="1" />
         </div>
         <div class="action-buttons">
-          <button id="buyStock">Buy Stock</button>
-          <button id="sellStock">Sell Stock</button>
+          <button id="buyStock" disabled>Buy Stock</button>
+          <button id="sellStock" disabled>Sell Stock</button>
         </div>
         <div id="stock-info" class="stock-info">
-          <div class="current-price"></div>
+          <div class="stock-price-container">
+            <div class="current-price"></div>
+            <div class="trade-price" id="trade-price"></div>
+          </div>
           <div class="metrics-display"></div>
         </div>
       </div>

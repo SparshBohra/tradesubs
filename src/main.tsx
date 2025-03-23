@@ -50,23 +50,29 @@ Devvit.addCustomPostType({
               break;
             }
             case "buyStock": {
+              const stockData = await calculateStockPrice(context, message.data.subreddit);
+              // Use the price from the trade request instead of calculating new one
+              const tradePrice = message.data.price;
+              
               const result = await buyStock(
                 context,
                 username,
                 message.data.subreddit ?? "",
-                message.data.amount
+                message.data.amount,
+                tradePrice  // Pass the trade price to buyStock
               );
-              const updatedPortfolio = await getUserPortfolio(
-                context,
-                username
-              );
+              
+              const updatedPortfolio = await getUserPortfolio(context, username);
               const updatedHistory = await getTradeHistory(context, username);
               setPortfolio(updatedPortfolio);
               webView.postMessage({
                 type: "updatePortfolio",
                 data: {
                   portfolio: updatedPortfolio,
-                  trade: result.trade,
+                  trade: {
+                    ...result.trade,
+                    price: tradePrice  // Ensure we use the same price
+                  },
                   tradeHistory: updatedHistory,
                 },
               });
@@ -74,11 +80,14 @@ Devvit.addCustomPostType({
             }
 
             case "sellStock": {
+              const tradePrice = message.data.price;
+              
               const result = await sellStock(
                 context,
                 username,
                 message.data.subreddit,
-                message.data.amount
+                message.data.amount,
+                tradePrice  // Pass the trade price
               );
               const latestPortfolio = await getUserPortfolio(context, username);
               const updatedHistory = await getTradeHistory(context, username);
