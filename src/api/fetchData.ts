@@ -1,60 +1,54 @@
-/**
- * fetchData.ts
- *
- * Fetches real-time subreddit data using the provided context's reddit API,
- * counting only the new posts that weren't processed in the previous fetch.
- *
- * Assumes each post has a 'createdAt' property representing its creation time (as a Unix timestamp in seconds).
- */
+interface SubredditData {
+    posts: number;
+    comments: number;
+    subscribers: number;
+    volatility: number;
+}
 
- export async function fetchSubredditData(context: any, subreddit: string) {
-    // Define a key to store the last processed timestamp for this subreddit
-    const lastTimestampKey = `lastTimestamp_${subreddit}`;
-    
-    // Retrieve the last processed timestamp from the KV store; default to 0 if not set.
-    let lastTimestamp = parseInt(await context.redis.get(lastTimestampKey) || "0");
-  
-    // Fetch the latest 50 posts from the subreddit, sorted by "new"
-    const posts = await context.reddit.listing({
-      subreddit,
-      sort: "new",
-      limit: 50
-    });
-  
-    // Filter posts that are truly new (i.e. created after lastTimestamp)
-    const newPosts = posts.filter((post: any) => {
-      // Ensure post.createdAt is available; adjust if using milliseconds instead of seconds.
-      return post.createdAt > lastTimestamp;
-    });
-  
-    // If there are new posts, update the stored lastTimestamp to the newest post's createdAt value.
-    if (newPosts.length > 0) {
-      // posts are assumed to be sorted descending (newest first), so newPosts[0] is the newest.
-      lastTimestamp = newPosts[0].createdAt;
-      await context.redis.set(lastTimestampKey, lastTimestamp.toString());
-    }
-  
-    // For simplicity, fetch comments from the newest post if available.
-    let comments = [];
-    if (posts.length > 0) {
-      comments = await context.reddit.comments({
-        subreddit,
-        postId: posts[0].id
-      });
-    }
-  
-    // Fetch detailed subreddit info by name.
-    const subredditInfo = await context.reddit.getSubredditByName({ name: subreddit });
-  
-    return {
-      // Count only the new posts rather than the full listing
-      newPosts: newPosts.length,
-      comments: comments.length,
-      karma: subredditInfo.karma,
-      // Engagement is calculated based on new posts count + comments
-      engagement: subredditInfo.karma / (newPosts.length + comments.length + 1),
-      // Volatility is a simple function of karma and new posts count
-      volatility: Math.abs(subredditInfo.karma - newPosts.length * 10)
+interface SimulatedDataType {
+    [key: string]: SubredditData;
+}
+
+export async function fetchSubredditData(context: any, subreddit: string) {
+    const simulatedData: SimulatedDataType = {
+        'wallstreetbets': { posts: 25, comments: 1200, subscribers: 15000, volatility: 0.8 },
+        'cryptocurrency': { posts: 18, comments: 800, subscribers: 12000, volatility: 0.7 },
+        'technology': { posts: 15, comments: 400, subscribers: 8000, volatility: 0.4 },
+        'programming': { posts: 12, comments: 300, subscribers: 9000, volatility: 0.3 },
+        'bitcoin': { posts: 20, comments: 900, subscribers: 11000, volatility: 0.9 },
+        'ethereum': { posts: 16, comments: 700, subscribers: 10000, volatility: 0.8 },
+        'investing': { posts: 10, comments: 200, subscribers: 7000, volatility: 0.5 },
+        'personalfinance': { posts: 8, comments: 150, subscribers: 6000, volatility: 0.2 },
+        'memes': { posts: 30, comments: 1500, subscribers: 20000, volatility: 0.6 },
+        'dankmemes': { posts: 28, comments: 1300, subscribers: 18000, volatility: 0.7 },
+        'penkemongo': { posts: 5, comments: 100, subscribers: 5000, volatility: 0.4 }
     };
-  }
-  
+
+    // Get data for the requested subreddit or use default values
+    const data = simulatedData[subreddit.toLowerCase()] || { posts: 5, comments: 100, subscribers: 5000, volatility: 0.5 };
+
+    // Add some random fluctuation with bounds
+    const randomFactor = Math.max(0.5, Math.min(1.5, 1 + (Math.random() - 0.5) * data.volatility));
+
+    // Calculate base metrics
+    const newPosts = Math.max(1, Math.floor(data.posts * randomFactor));
+    const comments = Math.max(1, Math.floor(data.comments * randomFactor));
+    const karma = Math.max(100, Math.floor(data.subscribers * randomFactor));
+    
+    // Calculate derived metrics
+    const engagement = Math.max(0.01, comments / (newPosts + 1));
+    const volatility = Math.max(1, data.volatility * 100);
+    
+    // Calculate price with minimum value
+    const basePrice = (karma / 100) * (1 + engagement);
+    const price = Math.max(1, Math.floor(basePrice * 100) / 100);
+
+    return {
+        newPosts,
+        comments,
+        karma,
+        engagement,
+        volatility,
+        price
+    };
+}

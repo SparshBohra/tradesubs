@@ -11,23 +11,45 @@
       <div class="stats-box">
         <h2>Welcome, <span id="username">Guest</span>!</h2>
         <p id="message">Connecting to Karma Street...</p>
-        <div class="counter-display">
-          <span>Current Score: </span>
-          <span id="counter">0</span>
-        </div>
       </div>
 
-      <div class="action-buttons">
-        <button id="sendMessage">Update Score</button>
-        <button id="viewTrades">View Trades</button>
+      <div class="trading-form">
+        <h3>Trade Stocks</h3>
+        <div class="form-group">
+          <label for="subreddit">Subreddit:</label>
+          <input
+            list="subreddit-list"
+            id="subreddit"
+            placeholder="Select or type subreddit"
+          />
+          <datalist id="subreddit-list">
+            <!-- Will be populated by JavaScript -->
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label for="amount">Amount:</label>
+          <input type="number" id="amount" placeholder="Enter amount" min="1" />
+        </div>
+        <div class="action-buttons">
+          <button id="buyStock">Buy Stock</button>
+          <button id="sellStock">Sell Stock</button>
+        </div>
+        <div id="stock-info" class="stock-info">
+          <!-- Stock data will be displayed here -->
+        </div>
       </div>
 
       <div class="portfolio-summary">
         <h3>Portfolio Summary</h3>
         <div id="portfolio-data">Loading portfolio data...</div>
       </div>
+
+      <div class="trade-history">
+        <h3>Trade History</h3>
+        <div id="trade-history-data"></div>
+      </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="script.js"></script>
   </body>
 </html>

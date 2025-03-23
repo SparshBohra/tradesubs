@@ -1,19 +1,35 @@
-/** Message from Devvit to the web view. */
-export type DevvitMessage =
-  | { type: 'initialData'; data: { username: string; currentCounter: number } }
-  | { type: 'updateCounter'; data: { currentCounter: number } };
+export interface SubredditStock {
+  price: number;
+  newPosts: number;
+  comments: number;
+  karma: number;
+  engagement: number;
+  volatility: number;
+}
 
-/** Message from the web view to Devvit. */
-export type WebViewMessage =
-  | { type: 'webViewReady' }
-  | { type: 'setCounter'; data: { newCounter: number } };
+export interface WebViewMessage {
+  type: "webViewReady" | "buyStock" | "sellStock" | "requestPriceUpdate";
+  data?: {
+    subreddit?: string;
+    amount?: number;
+  };
+}
 
-/**
- * Web view MessageEvent listener data type. The Devvit API wraps all messages
- * from Blocks to the web view.
- */
-export type DevvitSystemMessage = {
-  data: { message: DevvitMessage };
-  /** Reserved type for messages sent via `context.ui.webView.postMessage`. */
-  type?: 'devvit-message' | string;
-};
+export interface DevvitMessage {
+  type: "initialData" | "updatePortfolio" | "tradeError" | "priceUpdate";
+  data: {
+    username?: string;
+    portfolio?: Record<string, number>;
+    message?: string;
+    stockData?: {
+      price: number;
+      previousPrice?: number;
+      newPosts: number;
+      comments: number;
+      karma: number;
+      engagement: number;
+      volatility: number;
+      timestamp: number;
+    };
+  };
+}

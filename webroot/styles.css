@@ -1,0 +1,123 @@
+#subreddit {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+/* Add styles for real-time price updates */
+.stock-metrics {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 15px 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stock-price {
+  font-size: 24px;
+  font-weight: bold;
+  color: #28a745;
+}
+
+.stock-price.decrease {
+  color: #dc3545;
+}
+
+.stock-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.metric-item {
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.metric-value {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.update-time {
+  font-size: 12px;
+  color: #6c757d;
+  text-align: right;
+  margin-top: 5px;
+}
+
+#subreddit:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+.trade-history {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+.trade-item {
+    display: grid;
+    grid-template-columns: 80px 120px 100px 100px 120px 160px;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    align-items: center;
+    font-size: 14px;
+}
+
+.trade-item:last-child {
+    border-bottom: none;
+}
+
+.trade-type {
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.trade-type.buy {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.trade-type.sell {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.trade-type.short {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.trade-price, .trade-total {
+    font-family: monospace;
+    text-align: right;
+}
+
+.trade-time {
+    color: #666;
+    font-size: 0.9em;
+}

@@ -1,19 +1,23 @@
-import { fetchSubredditData } from './fetchData';
+import { fetchSubredditData } from "./fetchData.js";
 
 const baseMomentum = 0.1;
 const baseSpeculation = 0.2;
 const decayFactor = 0.02;
 const bearishCorrection = 0.03;
 
-export async function calculateStockPrice(context: any, subreddit: string, prevPrice: number = 100) {
+export async function calculateStockPrice(
+  context: any,
+  subreddit: string,
+  prevPrice: number = 100
+) {
   const data = await fetchSubredditData(context, subreddit);
 
   const basePrice =
-    (0.4 * data.newPosts) +
-    (0.3 * data.comments) +
-    (0.2 * data.karma) +
-    (0.05 * data.engagement) +
-    (0.05 * data.volatility);
+    0.4 * data.newPosts +
+    0.3 * data.comments +
+    0.2 * data.karma +
+    0.05 * data.engagement +
+    0.05 * data.volatility;
 
   const activityChange = data.newPosts + data.comments - prevPrice / 10;
   const momentum = baseMomentum * (activityChange / (prevPrice + 1));

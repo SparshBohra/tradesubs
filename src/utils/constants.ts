@@ -1,3 +1,17 @@
+export const AVAILABLE_SUBREDDITS = [
+  'penkemongo',
+  'wallstreetbets',
+  'cryptocurrency',
+  'technology',
+  'programming',
+  'bitcoin',
+  'ethereum',
+  'investing',
+  'personalfinance',
+  'memes',
+  'dankmemes'
+];
+
 export const WEIGHTS = {
     posts: 0.4,
     comments: 0.3,
