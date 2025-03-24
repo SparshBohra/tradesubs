@@ -17,7 +17,8 @@ export async function getHistoricalPrices(
   const data: HistoricalPrice[] = [];
 
   // Get current price as base
-  const currentPrice = await calculateStockPrice(context, subreddit);
+  const price = await calculateStockPrice(context, subreddit);
+  const currentPrice = price.price;
 
   // Generate 24 hours of historical data
   for (let i = 0; i < 24; i++) {

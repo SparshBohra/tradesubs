@@ -16,7 +16,7 @@ Devvit.configure({
 
 // Add a custom post type to Devvit
 Devvit.addCustomPostType({
-  name: "Karma Street Trading",
+  name: "r/KarmaStreetTrading",
   height: "tall",
   render: (context) => {
     // Load username with useState hook
@@ -111,10 +111,11 @@ Devvit.addCustomPostType({
             }
 
             case "getStockPrice":
-              const price = await calculateStockPrice(
+              const calculate = await calculateStockPrice(
                 context,
                 message.data.subreddit
               );
+              const price = calculate.price;
               webView.postMessage({
                 type: "stockPrice",
                 data: { stockData: price },
@@ -128,8 +129,9 @@ Devvit.addCustomPostType({
               console.log("Requesting price update for:", subreddit);
 
               try {
+                const cal = await calculateStockPrice(context, subreddit);
                 const [price, historicalData] = await Promise.all([
-                  calculateStockPrice(context, subreddit),
+                  cal.price,
                   getHistoricalPrices(context, subreddit),
                 ]);
 
@@ -139,6 +141,11 @@ Devvit.addCustomPostType({
                     stockData: {
                       subreddit: subreddit,
                       price: price,
+                      posts: cal.posts,
+                      comments: cal.comments,
+                      karma: cal.karma,
+                      engagement: cal.engagement,
+                      volatility: cal.volatility,
                       timestamp: Date.now(),
                       historicalData: historicalData,
                     },
@@ -160,9 +167,6 @@ Devvit.addCustomPostType({
           console.error(error);
         }
       },
-      onUnmount() {
-        context.ui.showToast("Web view closed!");
-      },
     });
 
     // Render the custom post
@@ -170,7 +174,7 @@ Devvit.addCustomPostType({
       <vstack grow padding="small">
         <vstack grow alignment="middle center">
           <text size="xlarge" weight="bold">
-            Karma Street Trading
+            r/KarmaStreet
           </text>
           <spacer />
           <vstack alignment="start middle">
@@ -187,43 +191,6 @@ Devvit.addCustomPostType({
 
           {/* Test Controls */}
           <spacer size="medium" />
-          <hstack gap="medium">
-            <button
-              onPress={async () => {
-                try {
-                  await buyStock(context, username, "testsubreddit", 100);
-                  const updated = await getUserPortfolio(context, username);
-                  setPortfolio(updated);
-                  context.ui.showToast({ text: "Test buy successful!" });
-                } catch (error) {
-                  context.ui.showToast({
-                    text: error instanceof Error ? error.message : "Buy failed",
-                    type: "error",
-                  });
-                }
-              }}
-            >
-              Test Buy
-            </button>
-            <button
-              onPress={async () => {
-                try {
-                  await sellStock(context, username, "testsubreddit", 50);
-                  const updated = await getUserPortfolio(context, username);
-                  setPortfolio(updated);
-                  context.ui.showToast({ text: "Test sell successful!" });
-                } catch (error) {
-                  context.ui.showToast({
-                    text:
-                      error instanceof Error ? error.message : "Sell failed",
-                    type: "error",
-                  });
-                }
-              }}
-            >
-              Test Sell
-            </button>
-          </hstack>
         </vstack>
       </vstack>
     );

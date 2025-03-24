@@ -33,5 +33,12 @@ export async function calculateStockPrice(
     newPrice -= bearishCorrection * newPrice;
   }
 
-  return Math.max(newPrice, 1);
+  return {
+    price: Math.max(newPrice, 1),
+    posts: data.newPosts,
+    comments: data.comments,
+    karma: data.karma,
+    engagement: data.engagement,
+    volatility: data.volatility,
+  };
 }

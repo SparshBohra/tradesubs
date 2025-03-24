@@ -9,7 +9,8 @@ export async function buyStock(
   tradePrice?: number
 ) {
   // Use provided trade price or calculate new one
-  const price = tradePrice || (await calculateStockPrice(context, subreddit));
+  const getPrice = await calculateStockPrice(context, subreddit);
+  const price = tradePrice || getPrice.price;
   const total = price * amount;
 
   // Get the portfolio
@@ -54,17 +55,18 @@ export async function sellStock(
     : {};
 
   if (!portfolio[subreddit] || portfolio[subreddit] < amount) {
-    throw new Error("Not enough shares to sell!");
+    throw new Error("Not enough units to sell!");
   }
 
   // Use provided trade price or calculate new one
-  const price = tradePrice || (await calculateStockPrice(context, subreddit));
+  const getPrice = await calculateStockPrice(context, subreddit);
+  const price = tradePrice || getPrice.price;
   const total = price * amount;
 
   // Update portfolio
   portfolio[subreddit] -= amount;
   if (portfolio[subreddit] === 0) {
-    delete portfolio[subreddit]; // Remove subreddit if no shares left
+    delete portfolio[subreddit]; // Remove subreddit if no units left
   }
   await context.redis.set(`portfolio_${user}`, JSON.stringify(portfolio));
 

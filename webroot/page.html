@@ -2,62 +2,44 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Karma Street Dashboard</title>
+    <title>Karma Street</title>
     <link rel="stylesheet" href="styles.css" />
-    <!-- Use defer to ensure scripts load in correct order but don't block rendering -->
     <script src="chart.js" defer></script>
     <script src="script.js" defer></script>
   </head>
   <body>
-    <div class="container">
-      <h1>Karma Street Dashboard</h1>
-      <div class="stats-box">
-        <h2>Welcome, <span id="username">Guest</span>!</h2>
-        <p id="message">Connecting to Karma Street...</p>
+    <header class="app-header">
+      <div class="logo">
+        <span class="logo-icon">K</span>
+        <span class="logo-text">Karma Street</span>
       </div>
+      <p class="tagline">Trade the internet's attention economy.</p>
+    </header>
 
-      <div class="trading-form">
-        <h3>Trade Stocks</h3>
-        <!-- Add chart container -->
-        <div id="chart-container" class="chart-container"></div>
-
-        <div class="form-group">
-          <label for="subreddit">Subreddit:</label>
-          <input
-            list="subreddit-list"
-            id="subreddit"
-            placeholder="Select or type subreddit"
-          />
-          <datalist id="subreddit-list">
-            <!-- Will be populated by JavaScript -->
-          </datalist>
-        </div>
-        <div class="form-group">
-          <label for="amount">Amount:</label>
-          <input type="number" id="amount" placeholder="Enter amount" min="1" />
-        </div>
-        <div class="action-buttons">
-          <button id="buyStock" disabled>Buy Stock</button>
-          <button id="sellStock" disabled>Sell Stock</button>
-        </div>
-        <div id="stock-info" class="stock-info">
-          <div class="stock-price-container">
-            <div class="current-price"></div>
-            <div class="trade-price" id="trade-price"></div>
-          </div>
-          <div class="metrics-display"></div>
-        </div>
+    <nav class="main-nav">
+      <div class="nav-grid">
+        <a href="market.html" class="nav-item">
+          <span class="nav-icon">M</span>
+          <span class="nav-label">Market</span>
+        </a>
+        <a href="portfolio.html" class="nav-item">
+          <span class="nav-icon">P</span>
+          <span class="nav-label">My Portfolio</span>
+        </a>
+        <a href="settings.html" class="nav-item">
+          <span class="nav-icon">S</span>
+          <span class="nav-label">Settings</span>
+        </a>
       </div>
+    </nav>
 
-      <div class="portfolio-summary">
-        <h3>Portfolio Summary</h3>
-        <div id="portfolio-data">Loading portfolio data...</div>
-      </div>
-
-      <div class="trade-history">
-        <h3>Trade History</h3>
-        <div id="trade-history-data"></div>
-      </div>
+    <div class="welcome-box">
+      <h2>Welcome to Karma Street!</h2>
+      <p>Start trading subreddit stocks based on real Reddit activity. Buy low, sell high, and climb the leaderboards as you navigate the ever-changing landscape of internet culture and trends.</p>
     </div>
+
+    <footer class="app-footer">
+      <p>Karma Street - Reddit Trading Simulation © 2025</p>
+    </footer>
   </body>
 </html>
