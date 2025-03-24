@@ -151,6 +151,12 @@ class App {
     // Initialize components
     this.initializeSubredditList();
     this.setupEventListeners();
+    
+    // Initialize chart
+    const chartContainer = document.getElementById('chart-container');
+    if (chartContainer && window.PriceChart) {
+      this.chart = new PriceChart(chartContainer);
+    }
   }
 
   setupEventListeners() {
@@ -169,7 +175,6 @@ class App {
     
     try {
       this.currentStockData = stockData;
-      // Ensure price is set correctly and store it
       this.currentPrice = Number(stockData.price) || Number((stockData.karma / 100) * (1 + stockData.engagement));
       
       if (isNaN(this.currentPrice) || this.currentPrice <= 0) {
@@ -179,6 +184,11 @@ class App {
 
       const priceChange = this.currentPrice - (this.lastPrice || this.currentPrice);
       this.lastPrice = this.currentPrice;
+
+      // Update chart with new data
+      if (this.chart) {
+        this.chart.addPrice(this.currentPrice, Date.now());
+      }
 
       const stockInfo = document.querySelector('#stock-info');
       if (!stockInfo) {
@@ -277,7 +287,7 @@ class App {
     // Set up periodic updates
     this.updateInterval = setInterval(() => {
       this.requestPriceUpdate();
-    }, 5000); // Update every 5 seconds
+    },100); // Update every 5 seconds
   }
 
   requestPriceUpdate() {

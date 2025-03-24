@@ -7,6 +7,7 @@ import { buyStock, sellStock } from "./api/trading.js";
 import { getUserPortfolio } from "./api/portfolio.js";
 import { calculateStockPrice } from "./api/calculateStock.js";
 import { getTradeHistory } from "./api/trading.js";
+import { getHistoricalPrices } from "./api/priceHistory.js";
 
 Devvit.configure({
   redditAPI: true,
@@ -50,19 +51,25 @@ Devvit.addCustomPostType({
               break;
             }
             case "buyStock": {
-              const stockData = await calculateStockPrice(context, message.data.subreddit);
+              const stockData = await calculateStockPrice(
+                context,
+                message.data.subreddit
+              );
               // Use the price from the trade request instead of calculating new one
               const tradePrice = message.data.price;
-              
+
               const result = await buyStock(
                 context,
                 username,
                 message.data.subreddit ?? "",
                 message.data.amount,
-                tradePrice  // Pass the trade price to buyStock
+                tradePrice // Pass the trade price to buyStock
               );
-              
-              const updatedPortfolio = await getUserPortfolio(context, username);
+
+              const updatedPortfolio = await getUserPortfolio(
+                context,
+                username
+              );
               const updatedHistory = await getTradeHistory(context, username);
               setPortfolio(updatedPortfolio);
               webView.postMessage({
@@ -71,7 +78,7 @@ Devvit.addCustomPostType({
                   portfolio: updatedPortfolio,
                   trade: {
                     ...result.trade,
-                    price: tradePrice  // Ensure we use the same price
+                    price: tradePrice, // Ensure we use the same price
                   },
                   tradeHistory: updatedHistory,
                 },
@@ -81,13 +88,13 @@ Devvit.addCustomPostType({
 
             case "sellStock": {
               const tradePrice = message.data.price;
-              
+
               const result = await sellStock(
                 context,
                 username,
                 message.data.subreddit,
                 message.data.amount,
-                tradePrice  // Pass the trade price
+                tradePrice // Pass the trade price
               );
               const latestPortfolio = await getUserPortfolio(context, username);
               const updatedHistory = await getTradeHistory(context, username);
@@ -113,25 +120,39 @@ Devvit.addCustomPostType({
                 data: { stockData: price },
               });
               break;
+            // Add import at the top
+
+            // In the requestPriceUpdate case
             case "requestPriceUpdate": {
               const subreddit = message.data.subreddit;
               console.log("Requesting price update for:", subreddit);
 
-              const price = await calculateStockPrice(context, subreddit);
-              console.log("Received price data:", price);
+              try {
+                const [price, historicalData] = await Promise.all([
+                  calculateStockPrice(context, subreddit),
+                  getHistoricalPrices(context, subreddit),
+                ]);
 
-              const messageData = {
-                type: "priceUpdate",
-                data: {
-                  stockData: {
-                    subreddit: subreddit,
-                    price: price,
-                    timestamp: Date.now(),
+                const messageData = {
+                  type: "priceUpdate",
+                  data: {
+                    stockData: {
+                      subreddit: subreddit,
+                      price: price,
+                      timestamp: Date.now(),
+                      historicalData: historicalData,
+                    },
                   },
-                },
-              };
-              console.log("Sending to WebView:", messageData.data);
-              webView.postMessage(messageData as DevvitMessage);
+                };
+                console.log("Sending to WebView:", messageData.data);
+                webView.postMessage(messageData as DevvitMessage);
+              } catch (error) {
+                console.error("Error updating price:", error);
+                webView.postMessage({
+                  type: "tradeError",
+                  data: { message: "Failed to update price" },
+                } as DevvitMessage);
+              }
               break;
             }
           }
