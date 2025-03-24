@@ -8,6 +8,7 @@ import { getUserPortfolio } from "./api/portfolio.js";
 import { calculateStockPrice } from "./api/calculateStock.js";
 import { getTradeHistory } from "./api/trading.js";
 import { getHistoricalPrices } from "./api/priceHistory.js";
+import { saveUserCapital, getUserCapital } from "./api/capital.js";
 
 Devvit.configure({
   redditAPI: true,
@@ -39,6 +40,7 @@ Devvit.addCustomPostType({
               const username = await context.reddit.getCurrentUsername();
               const portfolio = await getUserPortfolio(context, username);
               const tradeHistory = await getTradeHistory(context, username);
+              const capital = await getUserCapital(context, username);
 
               webView.postMessage({
                 type: "initialData",
@@ -46,10 +48,18 @@ Devvit.addCustomPostType({
                   username,
                   portfolio,
                   tradeHistory,
+                  capital: capital ?? 50000, // Default capital if not set
                 },
               });
               break;
             }
+
+            case "saveCapital": {
+              const username = await context.reddit.getCurrentUsername();
+              await saveUserCapital(context, username, message.data.capital);
+              break;
+            }
+
             case "buyStock": {
               const stockData = await calculateStockPrice(
                 context,
@@ -66,21 +76,30 @@ Devvit.addCustomPostType({
                 tradePrice // Pass the trade price to buyStock
               );
 
+              // Save the updated capital
+              if (message.data.newCapital) {
+                await saveUserCapital(
+                  context,
+                  username,
+                  message.data.newCapital
+                );
+              }
+
               const updatedPortfolio = await getUserPortfolio(
                 context,
                 username
               );
               const updatedHistory = await getTradeHistory(context, username);
+              const currentCapital = await getUserCapital(context, username);
+
               setPortfolio(updatedPortfolio);
               webView.postMessage({
                 type: "updatePortfolio",
                 data: {
                   portfolio: updatedPortfolio,
-                  trade: {
-                    ...result.trade,
-                    price: tradePrice, // Ensure we use the same price
-                  },
+                  trade: result.trade,
                   tradeHistory: updatedHistory,
+                  capital: currentCapital,
                 },
               });
               break;

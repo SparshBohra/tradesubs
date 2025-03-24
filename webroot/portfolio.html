@@ -1,86 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Portfolio - Karma Street</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
     <script src="script.js" defer></script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="portfolio-header">
-            <div class="header-left">
-                <div class="logo">
-                    <div class="logo-icon">K</div>
-                    <span>Karma Street</span>
-                </div>
-            </div>
-            <a href="market.html" class="back-link">← Home</a>
+      <div class="portfolio-header">
+        <div class="header-left">
+          <div class="logo">
+            <div class="logo-icon">K</div>
+            <span>Karma Street</span>
+          </div>
         </div>
+        <a href="market.html" class="back-link">← Home</a>
+      </div>
 
-        <div class="portfolio-summary">
-            <div class="total-value">
-                <h1 id="portfolio-value">$0.00</h1>
-                <div class="value-change positive" id="portfolio-change">+$0.00 (0%)</div>
-            </div>
-            <div class="available-cash" id="available-cash">Available Cash: $0.00</div>
+      <div class="portfolio-summary">
+        <div class="total-value">
+          <h1 id="portfolio-value">$0.00</h1>
+          <div class="value-change positive" id="portfolio-change">
+            +$0.00 (0%)
+          </div>
         </div>
+        <div id="available-capital" class="value-display"></div>
+      </div>
 
-        <div class="chart-container">
-            [Portfolio Distribution Chart]
-        </div>
+      <div class="chart-container">[Portfolio Distribution Chart]</div>
 
-        <div class="holdings-section">
-            <h2>Your Holdings</h2>
-            <table class="holdings-table">
-                <thead>
-                    <tr>
-                        <th>Subreddit</th>
-                        <th>Qty</th>
-                        <th>Avg Price</th>
-                        <th>Current Value</th>
-                        <th>P&L</th>
-                    </tr>
-                </thead>
-                <tbody id="portfolio-data">
-                    <!-- Will be populated by JavaScript -->
-                </tbody>
-            </table>
-        </div>
+      <div class="holdings-section">
+        <h2>Your Holdings</h2>
+        <table class="holdings-table">
+          <thead>
+            <tr>
+              <th>Subreddit</th>
+              <th>Qty</th>
+              <th>Avg Price</th>
+              <th>Current Value</th>
+              <th>P&L</th>
+            </tr>
+          </thead>
+          <tbody id="portfolio-data">
+            <!-- Will be populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
 
-        <div class="transactions-section">
-            <h2>Recent Transactions</h2>
-            <table class="transactions-table">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Subreddit</th>
-                        <th>Amount</th>
-                        <th>Price</th>
-                        <th>Total</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
-                <tbody id="trade-history-data">
-                    <!-- Will be populated by JavaScript -->
-                </tbody>
-            </table>
-        </div>
+      <div class="transactions-section">
+        <h2>Recent Transactions</h2>
+        <table class="transactions-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Subreddit</th>
+              <th>Amount</th>
+              <th>Price</th>
+              <th>Total</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="trade-history-data">
+            <!-- Will be populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <nav class="bottom-nav">
-        <a href="page.html" class="nav-item">
-            <img src="home-icon.svg" alt="Home">
-            <span>Home</span>
-        </a>
-        <a href="market.html" class="nav-item">
-            <img src="market-icon.svg" alt="Market">
-            <span>Market</span>
-        </a>
-        <a href="portfolio.html" class="nav-item active">
-            <img src="portfolio-icon.svg" alt="Portfolio">
-            <span>Portfolio</span>
-        </a>
+      <a href="page.html" class="nav-item">
+        <img src="home-icon.svg" alt="Home" />
+        <span>Home</span>
+      </a>
+      <a href="market.html" class="nav-item">
+        <img src="market-icon.svg" alt="Market" />
+        <span>Market</span>
+      </a>
+      <a href="portfolio.html" class="nav-item active">
+        <img src="portfolio-icon.svg" alt="Portfolio" />
+        <span>Portfolio</span>
+      </a>
     </nav>
-</body>
+  </body>
 </html>

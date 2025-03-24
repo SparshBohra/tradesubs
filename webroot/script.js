@@ -15,6 +15,8 @@ class App {
 
     this.portfolio = {};
     this.tradeHistory = [];
+    this.currentPrices = {}; // Add this to track prices per subreddit
+    this.capital = null;  // Initialize as null instead of 10000
     this.lastPrice = 0;
     this.updateInterval = null;
     this.currentStockData = null;
@@ -34,45 +36,62 @@ class App {
 
     window.addEventListener('message', this.#onMessage);
     window.addEventListener('load', () => {
-      postWebViewMessage({ type: 'webViewReady' });
-    });
-
-    setInterval(() => {
-      postWebViewMessage({
-        type: 'requestPortfolioUpdate',
-        data: {}
+      postWebViewMessage({ 
+        type: 'webViewReady',
+        data: { loadCapital: true }  // Add flag to request capital
       });
-    }, 5000);
+    });
   }
 
   _onMessage(ev) {
     if (ev.data.type !== 'devvit-message') return;
     const { message } = ev.data.data;
-    console.log('Received message:', message.type, message.data);
-
+    
     switch (message.type) {
       case 'initialData': {
         this.displayMessage('Connected to Karma Street');
         this.portfolio = message.data.portfolio || {};
         this.tradeHistory = message.data.tradeHistory || [];
+        // Ensure capital is loaded from saved data
+        if (message.data.capital !== undefined) {
+          this.capital = message.data.capital;
+        } else if (this.capital === null) {
+          this.capital = 50000;  // Only set default if no saved capital
+        }
+        // Request prices for all portfolio items
+        Object.keys(this.portfolio).forEach(subreddit => {
+          this.requestPriceUpdate(subreddit);
+        });
         this.#updatePortfolioDisplay();
         this.#updateTradeHistory();
         break;
       }
       case 'priceUpdate': {
         if (message.data.stockData) {
+          const { subreddit, price } = message.data.stockData;
+          this.currentPrices[subreddit] = price;
           this.updateStockDisplay(message.data.stockData);
+          this.#updatePortfolioDisplay();
         }
         break;
       }
       case 'updatePortfolio': {
-        this.portfolio = message.data.portfolio;
-        this.#updatePortfolioDisplay();
+        this.portfolio = message.data.portfolio || {};
         if (message.data.trade) {
+          // Update capital from server
+          if (message.data.capital !== undefined) {
+            this.capital = message.data.capital;
+          }
           this.tradeHistory.push(message.data.trade);
           this.#updateTradeHistory();
         }
+        this.#updatePortfolioDisplay();
         this.displayMessage('Trade completed successfully');
+        
+        // Request fresh price updates after trade
+        Object.keys(this.portfolio).forEach(subreddit => {
+          this.requestPriceUpdate(subreddit);
+        });
         break;
       }
       case 'tradeError': {
@@ -97,36 +116,153 @@ class App {
       return;
     }
 
-    this.displayMessage(`Processing ${action} order at $${tradePrice.toFixed(2)}...`);
+    const totalCost = amount * tradePrice;
+    const newCapital = action === 'buy' ? 
+      this.capital - totalCost : 
+      this.capital + totalCost;
+
+    // First send the trade request
     postWebViewMessage({
       type: action === 'buy' ? 'buyStock' : 'sellStock',
       data: {
         subreddit,
         amount,
         price: tradePrice,
-        stockData: this.currentStockData
+        stockData: this.currentStockData,
+        newCapital: newCapital
+      }
+    });
+
+    // Then explicitly save the capital update
+    postWebViewMessage({
+      type: 'saveCapital',
+      data: {
+        capital: newCapital
       }
     });
   }
+
+  _onMessage(ev) {
+    if (ev.data.type !== 'devvit-message') return;
+    const { message } = ev.data.data;
+    
+    switch (message.type) {
+      case 'initialData': {
+        this.displayMessage('Connected to Karma Street');
+        this.portfolio = message.data.portfolio || {};
+        this.tradeHistory = message.data.tradeHistory || [];
+        // Ensure capital is loaded from saved data
+        if (message.data.capital !== undefined) {
+          this.capital = Number(message.data.capital);
+          // Immediately save the initial capital
+          postWebViewMessage({
+            type: 'saveCapital',
+            data: { capital: this.capital }
+          });
+        } else {
+          this.capital = 50000;
+        }
+        // Request prices for all portfolio items
+        Object.keys(this.portfolio).forEach(subreddit => {
+          this.requestPriceUpdate(subreddit);
+        });
+        this.#updatePortfolioDisplay();
+        this.#updateTradeHistory();
+        break;
+      }
+      case 'priceUpdate': {
+        if (message.data.stockData) {
+          const { subreddit, price } = message.data.stockData;
+          this.currentPrices[subreddit] = price;
+          this.updateStockDisplay(message.data.stockData);
+          this.#updatePortfolioDisplay();
+        }
+        break;
+      }
+      case 'updatePortfolio': {
+        this.portfolio = message.data.portfolio || {};
+        if (message.data.trade) {
+          const tradeCost = message.data.trade.price * message.data.trade.amount;
+          // Update capital based on trade type
+          if (message.data.trade.type === 'buy') {
+            this.capital = Number(this.capital) - Number(tradeCost);
+          } else {
+            this.capital = Number(this.capital) + Number(tradeCost);
+          }
+          
+          // Save the updated capital
+          postWebViewMessage({
+            type: 'saveCapital',
+            data: { capital: this.capital }
+          });
+          
+          this.tradeHistory.push(message.data.trade);
+          this.#updateTradeHistory();
+        }
+        this.#updatePortfolioDisplay();
+        this.displayMessage('Trade completed successfully');
+        
+        // Request fresh price updates after trade
+        Object.keys(this.portfolio).forEach(subreddit => {
+          this.requestPriceUpdate(subreddit);
+        });
+        break;
+      }
+      case 'tradeError': {
+        this.displayMessage(`Error: ${message.data.message}`);
+        break;
+      }
+    }
+  }
+
   _updatePortfolioDisplay() {
     if (!this.portfolioData) return;
-    console.log('Updating portfolio display:', this.portfolio);
+    
+    console.log('Portfolio update with prices:', {
+      portfolio: this.portfolio,
+      currentPrices: this.currentPrices,
+      tradeHistory: this.tradeHistory
+    });
     
     if (Object.keys(this.portfolio).length === 0) {
       this.portfolioData.innerHTML = '<tr><td colspan="5">No stocks in portfolio</td></tr>';
       return;
     }
 
+    let totalPortfolioValue = 0;
+    let totalInvestment = 0;
+
     const portfolioHtml = Object.entries(this.portfolio)
       .map(([subreddit, quantity]) => {
-        // Since the portfolio data seems to be just quantities, let's handle it differently
+        const trades = this.tradeHistory.filter(
+          trade => trade.subreddit === subreddit && trade.type === 'buy'
+        );
+        
+        const totalSpent = trades.reduce((sum, trade) => sum + (trade.price * trade.amount), 0);
+        const totalBought = trades.reduce((sum, trade) => sum + trade.amount, 0);
+        const avgPrice = totalSpent / totalBought || 0;
+        
+        const currentPrice = this.currentPrices[subreddit] || avgPrice || 0;
+        const currentValue = currentPrice * quantity;
+        
+        totalPortfolioValue += currentValue;
+        totalInvestment += avgPrice * quantity;
+
+        const profitLoss = currentValue - (avgPrice * quantity);
+        const profitLossPercent = avgPrice > 0 ? ((currentPrice - avgPrice) / avgPrice * 100) : 
+                                 (currentPrice > 0 ? Infinity : 0);
+
         return `
           <tr>
             <td>r/${subreddit}</td>
             <td>${quantity}</td>
-            <td>$0.00</td>
-            <td>$0.00</td>
-            <td class="neutral">$0.00</td>
+            <td>$${avgPrice.toFixed(2)}</td>
+            <td>$${currentValue.toFixed(2)}</td>
+            <td class="${profitLoss >= 0 ? 'positive' : 'negative'}">
+              ${profitLoss >= 0 ? '+' : ''}$${Math.abs(profitLoss).toFixed(2)} (${
+                isFinite(profitLossPercent) ? profitLossPercent.toFixed(2) + '%' : 'Infinity%'
+              })
+            </td>
           </tr>
         `;
       })
@@ -134,16 +270,24 @@ class App {
 
     this.portfolioData.innerHTML = portfolioHtml;
 
-    // Update total portfolio value and change (simplified for now)
+    // Update totals
     const portfolioValue = document.querySelector('#portfolio-value');
     const portfolioChange = document.querySelector('#portfolio-change');
     
     if (portfolioValue) {
-      portfolioValue.textContent = '$0.00';
+      portfolioValue.textContent = `$${totalPortfolioValue.toFixed(2)}`;
     }
     if (portfolioChange) {
-      portfolioChange.textContent = '$0.00 (0%)';
-      portfolioChange.className = 'value-change neutral';
+      const totalPL = totalPortfolioValue - totalInvestment;
+      const totalPLPercent = totalInvestment > 0 ? ((totalPL / totalInvestment) * 100) : 0;
+      portfolioChange.textContent = `${totalPL >= 0 ? '+' : ''}$${totalPL.toFixed(2)} (${totalPLPercent.toFixed(2)}%)`;
+      portfolioChange.className = `value-change ${totalPL >= 0 ? 'positive' : 'negative'}`;
+    }
+    
+    // Add available capital display
+    const capitalDisplay = document.querySelector('#available-capital');
+    if (capitalDisplay) {
+      capitalDisplay.textContent = `Available Cash: $${this.capital.toFixed(2)}`;
     }
   }
   _updateTradeHistory() {
@@ -435,6 +579,9 @@ class App {
                 <span style="font-size: 18px; margin-left: 8px; font-weight: 500;">
                   ${priceChange >= 0 ? '↑' : '↓'} ${Math.abs(priceChange).toFixed(2)}
                 </span>
+              </div>
+              <div style="font-size: 16px; color: #666; margin-top: 8px;">
+                Available Capital: $${this.capital.toFixed(2)}
               </div>
             </div>
 
