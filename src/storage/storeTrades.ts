@@ -1,4 +1,4 @@
-import { Trade } from '../models/trade';
+import { Trade } from '../models/trade.js';
 
 export async function logTrade(context: any, user: string, trade: Trade) {
   const tradesData = await context.redis.get(`trades_${user}`);

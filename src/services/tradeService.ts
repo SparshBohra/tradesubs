@@ -1,6 +1,6 @@
-import { buyStock, sellStock } from '../api/trading';
-import { logTrade } from '../storage/storeTrades';
-import { Trade } from '../models/trade';
+import { buyStock, sellStock } from '../api/trading.js';
+import { logTrade } from '../storage/storeTrades.js';
+import { Trade } from '../models/trade.js';
 
 export async function processBuy(context: any, user: string, subreddit: string, amount: number) {
   await buyStock(context, user, subreddit, amount);

@@ -7,6 +7,51 @@
     <script src="script.js" defer></script>
   </head>
   <body>
+    <!-- Chart Setup -->
+  <script>
+    const raw = localStorage.getItem("portfolio");
+    const portfolio = raw ? JSON.parse(raw) : {};
+
+    const portfolioList = document.getElementById("portfolio-list");
+    const noDataMessage = document.getElementById("noDataMessage");
+    const ctx = document.getElementById("portfolioChart").getContext("2d");
+
+    if (Object.keys(portfolio).length > 0) {
+      portfolioList.innerHTML = Object.entries(portfolio)
+        .map(([subreddit, amount]) => `<div>${subreddit}: ${amount} shares</div>`)
+        .join("");
+
+      const labels = Object.keys(portfolio);
+      const data = Object.values(portfolio);
+
+      new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels,
+          datasets: [{
+            label: "Your Portfolio Distribution",
+            data,
+            backgroundColor: [
+              "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0",
+              "#9966FF", "#FF9F40", "#76B041", "#FF6B6B"
+            ],
+            borderWidth: 1,
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "bottom",
+            },
+          },
+        },
+      });
+    } else {
+      noDataMessage.innerText = "No holdings yet to show a distribution chart.";
+    }
+  </script>
+
     <div class="container">
       <div class="portfolio-header">
         <div class="header-left">
@@ -15,7 +60,7 @@
             <span>Karma Street</span>
           </div>
         </div>
-        <a href="market.html" class="back-link">← Home</a>
+        <a href="page.html" class="back-link">← Home</a>
       </div>
 
       <div class="portfolio-summary">
@@ -28,7 +73,10 @@
         <div id="available-capital" class="value-display"></div>
       </div>
 
-      <div class="chart-container">[Portfolio Distribution Chart]</div>
+      <!-- <div class="chart-section">
+        <canvas id="portfolioChart" width="400" height="400"></canvas>
+        <div id="noDataMessage" style="text-align:center; color: #aaa;"></div>
+      </div> -->
 
       <div class="holdings-section">
         <h2>Your Holdings</h2>
@@ -70,16 +118,14 @@
 
     <nav class="bottom-nav">
       <a href="page.html" class="nav-item">
-        <img src="home-icon.svg" alt="Home" />
         <span>Home</span>
       </a>
       <a href="market.html" class="nav-item">
-        <img src="market-icon.svg" alt="Market" />
         <span>Market</span>
       </a>
-      <a href="portfolio.html" class="nav-item active">
-        <img src="portfolio-icon.svg" alt="Portfolio" />
+      <a href="portfolio.html" class="nav-item">
         <span>Portfolio</span>
+      </a>
       </a>
     </nav>
   </body>

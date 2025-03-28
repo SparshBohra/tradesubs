@@ -16,11 +16,12 @@ class App {
     this.portfolio = {};
     this.tradeHistory = [];
     this.currentPrices = {}; // Add this to track prices per subreddit
-    this.capital = null;  // Initialize as null instead of 10000
+    this.capital = null;  // Initialize as null instead of 5000
     this.lastPrice = 0;
     this.updateInterval = null;
     this.currentStockData = null;
     this.currentPrice = 0;
+    this.initialPrices = {};
 
     const isMarketPage = window.location.pathname.includes('market.html');
     const isTradingPage = window.location.pathname.includes('trading.html');
@@ -56,7 +57,7 @@ class App {
         if (message.data.capital !== undefined) {
           this.capital = message.data.capital;
         } else if (this.capital === null) {
-          this.capital = 50000;  // Only set default if no saved capital
+          this.capital = 10000;  // Only set default if no saved capital
         }
         // Request prices for all portfolio items
         Object.keys(this.portfolio).forEach(subreddit => {
@@ -160,7 +161,7 @@ class App {
             data: { capital: this.capital }
           });
         } else {
-          this.capital = 50000;
+          this.capital = 10000;
         }
         // Request prices for all portfolio items
         Object.keys(this.portfolio).forEach(subreddit => {
@@ -173,12 +174,19 @@ class App {
       case 'priceUpdate': {
         if (message.data.stockData) {
           const { subreddit, price } = message.data.stockData;
+          console.log('UI received priceUpdate for:', subreddit, 'with price:', price);
           this.currentPrices[subreddit] = price;
-          this.updateStockDisplay(message.data.stockData);
+      
+          // 👇 Only call this in Trading Page
+          if (window.location.pathname.includes('trading.html')) {
+            this.updateStockDisplay(message.data.stockData);
+          }
+      
+          this.updateMarketPrice(message.data.stockData);
           this.#updatePortfolioDisplay();
         }
         break;
-      }
+      }         
       case 'updatePortfolio': {
         this.portfolio = message.data.portfolio || {};
         if (message.data.trade) {
@@ -360,37 +368,40 @@ class App {
 
     this.subredditInput.addEventListener('input', () => this.validateSubreddit());
     this.subredditInput.addEventListener('change', () => {
+      const rawValue = this.subredditInput.value.trim();
+      const cleanSub = rawValue.replace(/^r\//i, '');
+      console.log('Sanitized subreddit:', cleanSub);
       this.startPriceUpdates();
-      this.requestPriceUpdate();
+      this.requestPriceUpdate(cleanSub);
     });
+    
   }
 
   initializeMarketView() {
     const trendingGrid = document.querySelector('#trending-grid');
     const techGrid = document.querySelector('#tech-grid');
-
+  
+    // Subreddits for UI display only
     const subreddits = {
-      trending: ['bitcoin', 'cryptocurrency', 'ethereum'],
-      tech: ['technology', 'programming', 'artificialintelligence']
+      trending: ['penkemongo', 'wallstreetbets', 'cryptocurrency', 'bitcoin', 'ethereum'],
+      tech: ['technology', 'programming', 'investing', 'personalfinance', 'memes', 'dankmemes']
     };
-
+  
     if (trendingGrid) {
       this.renderSubredditCards(trendingGrid, subreddits.trending.map(name => ({ name, price: 0, change: 0 })));
     }
     if (techGrid) {
       this.renderSubredditCards(techGrid, subreddits.tech.map(name => ({ name, price: 0, change: 0 })));
     }
-
-    [...subreddits.trending, ...subreddits.tech].forEach(subreddit => {
-      this.requestPriceUpdate(subreddit);
-    });
-
+  
     setInterval(() => {
       [...subreddits.trending, ...subreddits.tech].forEach(subreddit => {
         this.requestPriceUpdate(subreddit);
       });
     }, 5000);
+    
   }
+  
 
   initializePortfolioView() {
     this.messageElement = document.querySelector('#message');
@@ -398,22 +409,29 @@ class App {
     this.tradeHistoryData = document.querySelector('#trade-history-data');
   }
 
-  updateMarketPrice(stockData) {
-    const price = Number(stockData.price) || Number((stockData.karma / 100) * (1 + stockData.engagement));
-    const card = document.querySelector(`[data-subreddit="${stockData.subreddit}"]`);
-
-    if (card && !isNaN(price)) {
-      const priceElement = card.querySelector('.price');
-      const changeElement = card.querySelector('.change');
-      const oldPrice = Number(priceElement.textContent.replace('$', ''));
-
-      const change = oldPrice ? ((price - oldPrice) / oldPrice) * 100 : 0;
-
-      priceElement.textContent = `$${price.toFixed(2)}`;
-      changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
-      changeElement.className = `change ${change >= 0 ? 'positive' : 'negative'}`;
+  async updateMarketPrice(stockData) {
+    const price = Number(stockData.price) || 0;
+    const card = document.querySelector(`[data-subreddit="${stockData.subreddit.toLowerCase()}"]`);
+    if (!card) return;
+    
+    const priceElement = card.querySelector('.price');
+    const changeElement = card.querySelector('.change');
+    
+    // Instead of comparing to the previous update, compare to the stored initial price.
+    if (!(stockData.subreddit in this.initialPrices)) {
+      this.initialPrices[stockData.subreddit] = stockData.price;
     }
+    const initialPrice = this.initialPrices[stockData.subreddit];
+    
+    const dailyChangePct = ((price - initialPrice) / initialPrice) * 100;
+    
+    // Update DOM
+    priceElement.textContent = `$${price.toFixed(2)}`;
+    changeElement.textContent = `${dailyChangePct >= 0 ? '+' : ''}${dailyChangePct.toFixed(1)}% (daily)`;
+    changeElement.className = `change ${dailyChangePct >= 0 ? 'positive' : 'negative'}`;
   }
+  
+  
 
   renderSubredditCards(container, subreddits) {
     if (!container) return;
@@ -473,14 +491,17 @@ class App {
   }
 
   requestPriceUpdate(subreddit = null) {
-    const targetSubreddit = subreddit || this.subredditInput?.value.trim();
+    const targetSubreddit = subreddit || this.selectedSubreddit || this.subredditInput.value.trim().replace(/^r\//i, '');
+    console.log('Requesting price update for:', targetSubreddit);
     if (!targetSubreddit) return;
-
+  
     postWebViewMessage({
       type: 'requestPriceUpdate',
       data: { subreddit: targetSubreddit }
     });
   }
+  
+  
 
   startPriceUpdates() {
     if (this.updateInterval) clearInterval(this.updateInterval);
@@ -498,13 +519,21 @@ class App {
   initializeTradingView() {
     const params = new URLSearchParams(window.location.search);
     const subreddit = params.get('subreddit');
-
+  
     if (subreddit && this.subredditInput) {
       this.subredditInput.value = subreddit;
-      this.startPriceUpdates();
-      this.requestPriceUpdate();
+      
+      // 💥 Save the selected subreddit as this.selectedSubreddit
+      this.selectedSubreddit = subreddit;
+  
+      // 💥 Make sure all updates stay scoped to selectedSubreddit
+      this.requestPriceUpdate(this.selectedSubreddit);
+      this.updateInterval = setInterval(() => {
+        this.requestPriceUpdate(this.selectedSubreddit);
+      }, 5000);
     }
   }
+  
 
   initializeSubredditList() {
     const subreddits = [
@@ -529,10 +558,11 @@ class App {
   }
 
   updateStockDisplay(stockData) {
-      if (!stockData) return;
+    if (!stockData || stockData.subreddit !== this.selectedSubreddit) return;  
   
       try {
-        this.currentStockData = stockData;
+        if (!this.stockDataMap) this.stockDataMap = {};
+        this.stockDataMap[stockData.subreddit] = stockData;
         this.currentPrice = Number(stockData.price) || Number((stockData.karma / 100) * (1 + stockData.engagement));
   
         if (isNaN(this.currentPrice)) {
@@ -540,8 +570,11 @@ class App {
           return;
         }
   
-        const priceChange = this.currentPrice - (this.lastPrice || this.currentPrice);
-        this.lastPrice = this.currentPrice;
+        if (!this.lastPrices) this.lastPrices = {};
+        const previousPrice = this.lastPrices[stockData.subreddit] || this.currentPrice;
+        const priceChange = this.currentPrice - previousPrice;
+        this.lastPrices[stockData.subreddit] = this.currentPrice;
+
   
         // Update subreddit icon
         const subredditIcon = document.getElementById('subreddit-icon');
@@ -558,7 +591,11 @@ class App {
         }
         
         if (priceChangeElement) {
-          const changePercent = this.lastPrice ? ((priceChange / this.lastPrice) * 100) : 0;
+        const previousPrice = this.lastPrices[stockData.subreddit] || this.currentPrice;
+        const changePercent = (previousPrice > 0)
+          ? ((this.currentPrice - previousPrice) / previousPrice) * 100
+          : 0;
+
           priceChangeElement.textContent = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(1)}%`;
           priceChangeElement.style.backgroundColor = changePercent >= 0 ? '#e6f4ea' : '#fde7e9';
           priceChangeElement.style.color = changePercent >= 0 ? '#00c853' : '#ff3d00';
@@ -585,17 +622,17 @@ class App {
               </div>
             </div>
 
-            <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; text-align: center;">
+            <div style="background: #f8f9fa; padding: 16px; border-radius: 6px; text-align: center;">
               <div style="color: #666; font-size: 14px; margin-bottom: 8px;">Karma</div>
-              <div style="font-size: 24px; font-weight: 600; color: #1a1a1b;">${stockData.karma || 0}</div>
+              <div style="font-size: 20px; font-weight: 600; color: #1a1a1b;">${stockData.karma || 0}</div>
             </div>
-            <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; text-align: center;">
-              <div style="color: #666; font-size: 14px; margin-bottom: 8px;">Posts</div>
-              <div style="font-size: 24px; font-weight: 600; color: #1a1a1b;">${stockData.posts || 0}</div>
+            <div style="background: #f8f9fa; padding: 16px; border-radius: 6px; text-align: center;">
+              <div style="color: #666; font-size: 14px; margin-bottom: 8px;">New Posts</div>
+              <div style="font-size: 20px; font-weight: 600; color: #1a1a1b;">${stockData.posts || 0}</div>
             </div>
-            <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; text-align: center;">
-              <div style="color: #666; font-size: 14px; margin-bottom: 8px;">Comments</div>
-              <div style="font-size: 24px; font-weight: 600; color: #1a1a1b;">${stockData.comments || 0}</div>
+            <div style="background: #f8f9fa; padding: 16px; border-radius: 6px; text-align: center;">
+              <div style="color: #666; font-size: 14px; margin-bottom: 8px;">New Comments</div>
+              <div style="font-size: 20px; font-weight: 600; color: #1a1a1b;">${stockData.comments || 0}</div>
             </div>
           </div>
         `;

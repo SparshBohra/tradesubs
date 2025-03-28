@@ -145,10 +145,11 @@ Devvit.addCustomPostType({
             // In the requestPriceUpdate case
             case "requestPriceUpdate": {
               const subreddit = message.data.subreddit;
-              console.log("Requesting price update for:", subreddit);
+              console.log("Backend: Received requestPriceUpdate for:", subreddit);
 
               try {
                 const cal = await calculateStockPrice(context, subreddit);
+                console.log("Backend: calculateStockPrice returned:", cal);
                 const [price, historicalData] = await Promise.all([
                   cal.price,
                   getHistoricalPrices(context, subreddit),

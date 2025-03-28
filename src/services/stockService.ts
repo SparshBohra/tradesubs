@@ -1,4 +1,4 @@
-import { updateStockPrice } from '../storage/storePrices';
+import { updateStockPrice } from '../storage/storePrices.js';
 
 export async function updateStockForSubreddit(context: any, subreddit: string) {
   return await updateStockPrice(context, subreddit);

@@ -46,19 +46,24 @@ Devvit.addCustomPostType({
 
 // Menu item to create trading post
 Devvit.addMenuItem({
-  label: "TradingApp for Subreddits",
+  label: "TradingApp for Subreddits 1",
   location: "subreddit",
   onPress: async (_event, context) => {
     const { reddit, ui, redis } = context;
     const subreddit = await reddit.getCurrentSubreddit();
 
+    // @ts-ignore
     const post = await reddit.submitPost({
       title: "r/KarmaStreetTrading",
-      subredditName: subreddit.name,
-      kind: "trading",
+      subredditName: "KarmaStreetTest",
+      preview: (
+        <vstack>
+          <text>Loading KarmaStreetTrading...</text>
+        </vstack>
+      ),
     });
 
-    ui.showToast({ text: "Created post!" });
+    ui.showToast({ text: `Created post` });
     ui.navigateTo(post);
   },
 });

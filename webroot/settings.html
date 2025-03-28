@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings | Karma Street</title>
+</head>
+<body style="font-family: Arial, sans-serif; padding: 16px; background-color: #fff; color: #1a1a1a;">
+  <main class="settings-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center;">
+        <div style="width: 32px; height: 32px; background: #ff4500; color: #fff; font-weight: bold; font-size: 20px; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-right: 8px;">K</div>
+        <span style="font-size: 20px; font-weight: 600;">Karma Street</span>
+      </div>
+      <a href="page.html" style="text-decoration: none; color: #555; font-size: 16px;">← Home</a>
+    </div>
+
+    <section style="margin-bottom: 24px;">
+      <h2 style="font-size: 18px; margin-bottom: 8px;">Theme</h2>
+      <button id="toggle-theme" style="padding: 8px 16px; border: none; background: #eee; border-radius: 6px; cursor: pointer;">Toggle Dark Mode</button>
+    </section>
+
+    <section style="margin-bottom: 24px;">
+      <h2 style="font-size: 18px; margin-bottom: 8px;">Notifications</h2>
+      <label style="font-size: 14px;">
+        <input type="checkbox" id="enable-notifications" style="margin-right: 6px;" />
+        Enable price alerts
+      </label>
+    </section>
+
+    <section style="margin-bottom: 24px;">
+      <h2 style="font-size: 18px; margin-bottom: 8px;">Account</h2>
+      <button id="reset-portfolio" style="padding: 8px 16px; border: none; background: #eee; border-radius: 6px; cursor: pointer;">Reset Portfolio</button>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById("toggle-theme").addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+    });
+
+    document.getElementById("reset-portfolio").addEventListener("click", () => {
+      localStorage.removeItem("portfolio");
+      alert("Portfolio reset!");
+    });
+  </script>
+</body>
+</html>
