@@ -46,7 +46,7 @@ Devvit.addCustomPostType({
 
 // Menu item to create trading post
 Devvit.addMenuItem({
-  label: "TradingApp for Subreddits 1",
+  label: "🎮 Karma Street – Reddit Stock Market Game",
   location: "subreddit",
   onPress: async (_event, context) => {
     const { reddit, ui, redis } = context;
