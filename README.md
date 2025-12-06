@@ -1,123 +1,151 @@
-# 🚀 Karma Street
+# 🏛️ Karma Street
 
-Karma Street is a **Reddit-integrated stock trading game** where users **buy, sell, and short subreddit stocks** based on activity and momentum. This Devvit-powered app calculates **stock prices for subreddits**, tracks user portfolios, and enables in-app trading—all within Reddit.
+**Buy the Hype. Sell the Cringe. Trade Subreddits Like Stocks.**
 
----
+A Reddit trading simulation game built with Devvit where subreddits function as stocks. Prices move based on real Reddit activity — karma, posts, comments, and engagement.
 
-## 📌 **Project Status**
-✅ **Backend Setup Done**
-⏳ **WebView UI & Testing Left**
+![Karma Street](https://img.shields.io/badge/Platform-Reddit-FF4500?style=flat-square&logo=reddit)
+![Devvit](https://img.shields.io/badge/Built%20with-Devvit-000000?style=flat-square)
 
----
+## 🎮 How It Works
 
-## 📂 **Project Structure**
+1. **Browse** — Explore subreddits on the market
+2. **Analyze** — Check karma, posts, and price trends
+3. **Trade** — Buy low, sell high with karma dollars
+4. **Profit** — Track your gains in your portfolio
+
+Start with **$50,000** in virtual karma dollars and see if you can beat the market!
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ (recommended: Node 20 LTS)
+- A Reddit account
+- A subreddit you moderate (for testing)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/karma-street.git
+cd karma-street
+
+# Remove any existing devvit installation (if needed)
+npm uninstall -g devvit
+
+# Install dependencies
+npm install
+
+# Login to Reddit (opens browser)
+npx @devvit/cli@latest login
+
+# Run the app locally
+npx @devvit/cli@latest playtest KarmaStreetTest
+```
+
+Replace `KarmaStreetTest` with your test subreddit name.
+
+### Creating a Trading Post
+
+1. Go to your test subreddit
+2. Click **Create Post**
+3. Select **r/KarmaStreetTrading** from post types
+4. Click **Launch Trading App**
+
+## 📊 Features
+
+- **Real-Time Prices** — Prices update every 5 seconds based on Reddit activity
+- **10+ Tradeable Subreddits** — Including r/wallstreetbets, r/bitcoin, r/technology
+- **Portfolio Tracking** — Monitor holdings, P&L, and trade history
+- **Realistic Price Movement** — ±1-2% changes per update, no wild swings
+- **Dark Trading Terminal UI** — Professional, mobile-friendly interface
+
+## 💰 Subreddit Stock Prices
+
+| Subreddit | Base Price | Category |
+|-----------|-----------|----------|
+| r/bitcoin | $210 | Crypto |
+| r/wallstreetbets | $185 | Finance |
+| r/ethereum | $165 | Crypto |
+| r/cryptocurrency | $142 | Crypto |
+| r/technology | $95 | Tech |
+| r/investing | $88 | Finance |
+| r/programming | $72 | Tech |
+| r/personalfinance | $65 | Finance |
+| r/memes | $45 | Meme |
+| r/dankmemes | $38 | Meme |
+
+## 🛠️ Tech Stack
+
+- **Framework:** Reddit Devvit (TypeScript)
+- **Frontend:** Vanilla HTML/CSS/JS (WebView)
+- **Storage:** Devvit Redis
+- **API:** Reddit API for subreddit data
+
+## 📁 Project Structure
+
 ```
 karma-street/
-├── devvit.config.ts   # Devvit app configuration
-├── devvit.yaml        # Devvit deployment config
-├── package.json       # Dependencies & scripts
 ├── src/
-│   ├── api/           # Business logic & API calls
-│   │   ├── calculateStock.ts  # Subreddit stock price logic
-│   │   ├── fetchData.ts       # Reddit data fetching
-│   │   ├── portfolio.ts       # Portfolio management
-│   │   ├── scheduler.ts       # Background tasks
-│   │   └── trading.ts         # Buy/Sell logic
-│   ├── main.ts        # App entry point
-│   ├── models/        # Data models
-│   │   ├── stock.ts   # Stock schema
-│   │   ├── trade.ts   # Trade schema
-│   │   └── user.ts    # User schema
-│   ├── services/      # Business logic services
-│   │   ├── stockService.ts    # Stock operations
-│   │   └── tradeService.ts    # Trade operations
-│   ├── storage/       # Redis-based storage
-│   │   ├── storePortfolio.ts  # Portfolio storage
-│   │   ├── storePrices.ts     # Subreddit price storage
-│   │   └── storeTrades.ts     # Trade history storage
-│   ├── utils/         # Utility functions
-│   │   ├── constants.ts       # App-wide constants
-│   │   ├── helpers.ts         # Helper functions
-│   │   └── logger.ts          # Logging utils
-│   └── webroot/       # WebView UI (Upcoming)
-│       ├── app.js     # WebView logic
-│       ├── page.html  # WebView UI template
-│       └── styles.css # WebView styles
-└── tsconfig.json      # TypeScript config
+│   ├── main.tsx           # Entry point & WebView handler
+│   ├── createPost.tsx     # Post type & scheduler
+│   ├── api/               # Backend logic
+│   │   ├── calculateStock.ts
+│   │   ├── trading.ts
+│   │   └── ...
+│   ├── storage/           # Redis operations
+│   └── utils/             # Helpers
+├── webroot/               # Frontend files
+│   ├── page.html          # Home
+│   ├── market.html        # Market view
+│   ├── trading.html       # Trading interface
+│   ├── portfolio.html     # Portfolio
+│   ├── script.js          # Frontend logic
+│   └── chart.js           # Price chart
+├── devvit.yaml            # App config
+└── package.json
 ```
+
+## 🎯 Roadmap
+
+See [ROADMAP.md](./ROADMAP.md) for the full development plan.
+
+**Phase 1** ✅ — UI/UX revamp, realistic prices, persistent state
+**Phase 2** — TradingView charts, advanced trading
+**Phase 3** — Leaderboards, achievements, social features
+**Phase 4** — Order types, indexes, short selling
+
+## 📝 Commands
+
+```bash
+# Login to Reddit
+npx @devvit/cli@latest login
+
+# Run locally with hot reload
+npx @devvit/cli@latest playtest <subreddit>
+
+# Upload to Reddit
+npx @devvit/cli@latest upload
+
+# View logs
+npx @devvit/cli@latest logs <subreddit>
+```
+
+## ⚠️ Known Limitations
+
+- Private/banned subreddits may cause price freezes
+- Limited to curated list of ~10 subreddits
+- Prices reset if Redis data is cleared
+
+## 🤝 Contributing
+
+Contributions welcome! Please read the roadmap first.
+
+## 📄 License
+
+BSD-3-Clause
 
 ---
 
-## 🛠 **Setup Instructions**
-
-### 🔹 **1️⃣ Install Dependencies**
-```sh
-npm install
-```
-
-### 🔹 **2️⃣ Devvit Setup**
-Make sure you are logged into Devvit CLI:
-```sh
-devvit login
-```
-Verify that your Reddit account has **developer permissions** for the subreddit.
-
-### 🔹 **3️⃣ Upload & Deploy App**
-Upload the app to Reddit:
-```sh
-devvit upload
-```
-
-Then, install it on your test subreddit:
-```sh
-devvit playtest r/KarmaStreetTest
-```
-
-## 🚀 **Running the App**
-Once installed, the app will initialize in your subreddit:
-* ✅ Backend runs within Reddit's infrastructure
-* ✅ **Stock prices are updated based on subreddit activity**
-* ✅ **Trading logic is live**
-* ❌ **WebView UI is still in progress**
-
-### **📝 Debugging Logs**
-To check real-time logs:
-```sh
-devvit logs r/KarmaStreetTest
-```
-
-## 👫 **Adding a Teammate**
-1. **Grant them Devvit access:**
-   * Have them install the Devvit CLI:
-   ```sh
-   npm install -g @devvit/cli
-   ```
-   * Log into Devvit:
-   ```sh
-   devvit login
-   ```
-   * Ensure their Reddit account has **developer permissions** in r/KarmaStreetTest.
-
-2. **Clone the repository:**
-   ```sh
-   git clone https://github.com/YOUR_GITHUB_USERNAME/karma-street.git
-   cd karma-street
-   npm install
-   ```
-
-3. **Run in Playtest Mode:**
-   ```sh
-   devvit playtest r/KarmaStreetTest
-   ```
-
-## 📌 **Next Steps**
-
-### 🔲 **Frontend (WebView)**
-* **Create UI for stock trading**
-* **Integrate with backend via Devvit's useWebView hook**
-* **Add buy/sell buttons in WebView**
-
-### 🔲 **Testing & Debugging**
-* **Verify Redis-based trade history storage**
-* **Ensure correct stock price calculations**
-* **Check for race conditions in trading logic**
+**No real money. Just vibes and karma.** 🚀

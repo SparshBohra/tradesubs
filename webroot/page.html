@@ -1,45 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Karma Street</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script src="chart.js" defer></script>
-    <script src="script.js" defer></script>
-  </head>
-  <body>
-    <header class="app-header">
-      <div class="logo">
-        <span class="logo-icon">K</span>
-        <span class="logo-text">Karma Street</span>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Karma Street</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg-primary: #09090b;
+      --bg-secondary: #0c0c0f;
+      --bg-card: #111114;
+      --bg-hover: #18181b;
+      --border: #27272a;
+      --border-hover: #3f3f46;
+      --text: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #ff4500;
+      --accent-hover: #ff6b35;
+      --profit: #10b981;
+      --loss: #ef4444;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .logo {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), #ff6b35);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px;
+    }
+    .logo-text h1 { font-size: 18px; font-weight: 700; }
+    .logo-text p { font-size: 11px; color: var(--text-muted); }
+    
+    .status {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px; color: var(--text-secondary);
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      background: var(--profit);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    /* Hero */
+    .hero { text-align: center; padding: 32px 0; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px; color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+    .hero h2 {
+      font-size: 28px; font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 14px; color: var(--text-muted);
+      max-width: 320px; margin: 0 auto 24px;
+    }
+    
+    /* Stats */
+    .stats {
+      display: flex; justify-content: center; gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .stat {
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 20px; font-weight: 700;
+      font-family: 'SF Mono', 'Monaco', monospace;
+    }
+    .stat-value.green { color: var(--profit); }
+    .stat-value.orange { color: var(--accent); }
+    .stat-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    
+    /* Nav Cards */
+    .nav-cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .nav-card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      text-decoration: none; color: var(--text);
+      transition: all 0.2s;
+    }
+    .nav-card:hover, .nav-card:active {
+      background: var(--bg-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+    .nav-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .nav-icon.orange { background: rgba(255, 69, 0, 0.15); }
+    .nav-icon.green { background: rgba(16, 185, 129, 0.15); }
+    .nav-icon.gray { background: rgba(113, 113, 122, 0.15); }
+    .nav-content { flex: 1; }
+    .nav-content h3 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .nav-content p { font-size: 12px; color: var(--text-muted); }
+    .nav-arrow { color: var(--text-muted); font-size: 18px; }
+    
+    /* How it works */
+    .how-it-works {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .how-it-works h3 {
+      font-size: 14px; font-weight: 600;
+      text-align: center; margin-bottom: 16px;
+    }
+    .steps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .step { text-align: center; }
+    .step-num {
+      width: 28px; height: 28px;
+      background: rgba(255, 69, 0, 0.15);
+      border: 1px solid rgba(255, 69, 0, 0.3);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 8px;
+      font-size: 12px; font-weight: 600; color: var(--accent);
+    }
+    .step h4 { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .step p { font-size: 11px; color: var(--text-muted); }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px; color: var(--text-muted);
+    }
+  </style>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">K</div>
+      <div class="logo-text">
+        <h1>Karma Street</h1>
+        <p>Reddit Stock Exchange</p>
       </div>
-      <p class="tagline">Trade the internet's attention economy.</p>
+      <div class="status">
+        <div class="status-dot"></div>
+        <span>Market Open</span>
+      </div>
     </header>
 
-    <nav class="main-nav">
-      <div class="nav-grid">
-        <a href="market.html" class="nav-item">
-          <span class="nav-icon">M</span>
-          <span class="nav-label">Market</span>
-        </a>
-        <a href="portfolio.html" class="nav-item">
-          <span class="nav-icon">P</span>
-          <span class="nav-label">My Portfolio</span>
-        </a>
-        <a href="settings.html" class="nav-item">
-          <span class="nav-icon">S</span>
-          <span class="nav-label">Settings</span>
-        </a>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="badge">
+        <span>📈</span>
+        <span>Trade the internet's attention economy</span>
       </div>
-    </nav>
+      <h2>Buy the Hype.<br>Sell the Cringe.</h2>
+      <p>Trade subreddits like stocks. Prices move based on real Reddit activity. No real money — just karma dollars and bragging rights.</p>
+    </section>
 
-    <div class="welcome-box">
-      <h2>Welcome to Karma Street!</h2>
-      <p>Start trading subreddit stocks based on real Reddit activity. Buy low, sell high, and climb the leaderboards as you navigate the ever-changing landscape of internet culture and trends.</p>
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value green">$50,000</div>
+        <div class="stat-label">Starting Capital</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">10+</div>
+        <div class="stat-label">Tradeable Subs</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value orange">LIVE</div>
+        <div class="stat-label">Price Updates</div>
+      </div>
     </div>
 
-    <footer class="app-footer">
-      <p>Karma Street - Reddit Trading Simulation © 2025</p>
+    <!-- Navigation Cards -->
+    <nav class="nav-cards">
+      <a href="market.html" class="nav-card">
+        <div class="nav-icon orange">📈</div>
+        <div class="nav-content">
+          <h3>Market</h3>
+          <p>Browse trending subreddits and discover trades</p>
+        </div>
+        <span class="nav-arrow">→</span>
+      </a>
+      <a href="portfolio.html" class="nav-card">
+        <div class="nav-icon green">💼</div>
+        <div class="nav-content">
+          <h3>Portfolio</h3>
+          <p>Track your holdings, P&L, and history</p>
+        </div>
+        <span class="nav-arrow">→</span>
+      </a>
+      <a href="settings.html" class="nav-card">
+        <div class="nav-icon gray">⚙️</div>
+        <div class="nav-content">
+          <h3>Settings</h3>
+          <p>Reset game and configure preferences</p>
+        </div>
+        <span class="nav-arrow">→</span>
+      </a>
+    </nav>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+      <h3>How It Works</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h4>Browse</h4>
+          <p>Find subreddits on the market</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h4>Analyze</h4>
+          <p>Check karma and price trends</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h4>Trade</h4>
+          <p>Buy low, sell high</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h4>Profit</h4>
+          <p>Track gains in portfolio</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      Karma Street • No real money. Just vibes and karma.
     </footer>
-  </body>
+  </div>
+</body>
 </html>

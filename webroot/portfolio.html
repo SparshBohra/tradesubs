@@ -1,132 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Portfolio - Karma Street</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script src="script.js" defer></script>
-  </head>
-  <body>
-    <!-- Chart Setup -->
-  <script>
-    const raw = localStorage.getItem("portfolio");
-    const portfolio = raw ? JSON.parse(raw) : {};
-
-    const portfolioList = document.getElementById("portfolio-list");
-    const noDataMessage = document.getElementById("noDataMessage");
-    const ctx = document.getElementById("portfolioChart").getContext("2d");
-
-    if (Object.keys(portfolio).length > 0) {
-      portfolioList.innerHTML = Object.entries(portfolio)
-        .map(([subreddit, amount]) => `<div>${subreddit}: ${amount} shares</div>`)
-        .join("");
-
-      const labels = Object.keys(portfolio);
-      const data = Object.values(portfolio);
-
-      new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels,
-          datasets: [{
-            label: "Your Portfolio Distribution",
-            data,
-            backgroundColor: [
-              "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0",
-              "#9966FF", "#FF9F40", "#76B041", "#FF6B6B"
-            ],
-            borderWidth: 1,
-          }],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "bottom",
-            },
-          },
-        },
-      });
-    } else {
-      noDataMessage.innerText = "No holdings yet to show a distribution chart.";
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio - Karma Street</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg-primary: #09090b;
+      --bg-card: #111114;
+      --bg-hover: #18181b;
+      --border: #27272a;
+      --text: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #ff4500;
+      --profit: #10b981;
+      --loss: #ef4444;
     }
-  </script>
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 70px;
+    }
+    
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+    
+    /* Header */
+    .header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .back-btn {
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    
+    /* Summary Card */
+    .summary {
+      background: linear-gradient(135deg, var(--bg-card), var(--bg-hover));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .summary-row {
+      display: flex; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .summary-col label { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; }
+    .summary-col.right { text-align: right; }
+    #portfolio-value {
+      font-size: 28px; font-weight: 700;
+      font-family: 'SF Mono', monospace;
+    }
+    #portfolio-change {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 4px;
+    }
+    .change-badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px; font-weight: 600;
+    }
+    .change-badge.up { background: rgba(16, 185, 129, 0.2); color: var(--profit); }
+    .change-badge.down { background: rgba(239, 68, 68, 0.2); color: var(--loss); }
+    .change-pct { font-size: 12px; color: var(--text-muted); }
+    #available-capital {
+      font-size: 20px; font-weight: 700;
+      font-family: 'SF Mono', monospace;
+    }
+    .capital-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    
+    /* Stats Grid */
+    .stats {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .stat-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-value {
+      font-size: 18px; font-weight: 700;
+      font-family: 'SF Mono', monospace;
+    }
+    .stat-value.green { color: var(--profit); }
+    
+    /* Table Card */
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .table-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-header h3 { font-size: 14px; font-weight: 600; }
+    
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      text-align: left;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 500;
+      padding: 10px 12px;
+      background: var(--bg-hover);
+      text-transform: uppercase;
+    }
+    .data-table td {
+      padding: 12px;
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .data-table .mono { font-family: 'SF Mono', monospace; }
+    .data-table .green { color: var(--profit); }
+    .data-table .red { color: var(--loss); }
+    
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+    }
+    .empty-state p { font-size: 13px; margin-bottom: 8px; }
+    .empty-state a { color: var(--accent); text-decoration: none; font-size: 12px; }
+    
+    .stock-cell {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .stock-mini-icon {
+      width: 24px; height: 24px;
+      background: linear-gradient(135deg, var(--accent), #ff6b35);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: bold; color: white;
+    }
+    
+    .trade-type {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px; font-weight: 600;
+    }
+    .trade-type.buy { background: rgba(16, 185, 129, 0.2); color: var(--profit); }
+    .trade-type.sell { background: rgba(239, 68, 68, 0.2); color: var(--loss); }
+    
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #0c0c0f;
+      border-top: 1px solid var(--border);
+      padding: 10px 0;
+      display: flex; justify-content: center; gap: 32px;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item span:first-child { font-size: 20px; }
+  </style>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <a href="page.html" class="back-btn">← Home</a>
+      <h1>Portfolio</h1>
+    </header>
 
-    <div class="container">
-      <div class="portfolio-header">
-        <div class="header-left">
-          <div class="logo">
-            <div class="logo-icon">K</div>
-            <span>Karma Street</span>
+    <!-- Summary -->
+    <div class="summary">
+      <div class="summary-row">
+        <div class="summary-col">
+          <label>Total Portfolio Value</label>
+          <div id="portfolio-value">$0.00</div>
+          <div id="portfolio-change">
+            <span class="change-badge up">+$0.00</span>
+            <span class="change-pct">(0.0%)</span>
           </div>
         </div>
-        <a href="page.html" class="back-link">← Home</a>
-      </div>
-
-      <div class="portfolio-summary">
-        <div class="total-value">
-          <h1 id="portfolio-value">$0.00</h1>
-          <div class="value-change positive" id="portfolio-change">
-            +$0.00 (0%)
-          </div>
+        <div class="summary-col right">
+          <label>Available Cash</label>
+          <div id="available-capital">$50,000</div>
+          <div class="capital-label">Ready to invest</div>
         </div>
-        <div id="available-capital" class="value-display"></div>
-      </div>
-
-      <!-- <div class="chart-section">
-        <canvas id="portfolioChart" width="400" height="400"></canvas>
-        <div id="noDataMessage" style="text-align:center; color: #aaa;"></div>
-      </div> -->
-
-      <div class="holdings-section">
-        <h2>Your Holdings</h2>
-        <table class="holdings-table">
-          <thead>
-            <tr>
-              <th>Subreddit</th>
-              <th>Qty</th>
-              <th>Avg Price</th>
-              <th>Current Value</th>
-              <th>P&L</th>
-            </tr>
-          </thead>
-          <tbody id="portfolio-data">
-            <!-- Will be populated by JavaScript -->
-          </tbody>
-        </table>
-      </div>
-
-      <div class="transactions-section">
-        <h2>Recent Transactions</h2>
-        <table class="transactions-table">
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Subreddit</th>
-              <th>Amount</th>
-              <th>Price</th>
-              <th>Total</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody id="trade-history-data">
-            <!-- Will be populated by JavaScript -->
-          </tbody>
-        </table>
       </div>
     </div>
 
-    <nav class="bottom-nav">
-      <a href="page.html" class="nav-item">
-        <span>Home</span>
-      </a>
-      <a href="market.html" class="nav-item">
-        <span>Market</span>
-      </a>
-      <a href="portfolio.html" class="nav-item">
-        <span>Portfolio</span>
-      </a>
-      </a>
-    </nav>
-  </body>
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Holdings</div>
+        <div id="stat-holdings" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Trades</div>
+        <div id="stat-trades" class="stat-value">0</div>
+      </div>
+    </div>
+
+    <!-- Holdings Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Your Holdings</h3>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Stock</th>
+            <th>Qty</th>
+            <th>Avg</th>
+            <th>Value</th>
+            <th>P&L</th>
+          </tr>
+        </thead>
+        <tbody id="portfolio-data">
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <p>No holdings yet</p>
+                <a href="market.html">Browse the market →</a>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Recent Transactions</h3>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Stock</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="trade-history-data">
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <p>No transactions yet</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="page.html" class="nav-item">
+      <span>🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="market.html" class="nav-item">
+      <span>📈</span>
+      <span>Market</span>
+    </a>
+    <a href="portfolio.html" class="nav-item active">
+      <span>💼</span>
+      <span>Portfolio</span>
+    </a>
+  </nav>
+</body>
 </html>

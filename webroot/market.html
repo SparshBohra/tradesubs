@@ -1,50 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Market - Karma Street</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script src="script.js" defer></script>
-  </head>
-  <body>
-    <div class="container">
-      <div class="portfolio-header">
-        <div class="header-left">
-          <div class="logo">
-            <div class="logo-icon">K</div>
-            <span>Karma Street</span>
-          </div>
-        </div>
-        <a href="page.html" class="back-link">← Home</a>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market - Karma Street</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg-primary: #09090b;
+      --bg-secondary: #0c0c0f;
+      --bg-card: #111114;
+      --bg-hover: #18181b;
+      --border: #27272a;
+      --border-hover: #3f3f46;
+      --text: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #ff4500;
+      --profit: #10b981;
+      --loss: #ef4444;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 70px;
+    }
+    
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+    
+    /* Header */
+    .header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .back-btn {
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .header-status {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      background: var(--profit);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    /* Market Index */
+    .market-index {
+      background: linear-gradient(135deg, var(--bg-card), var(--bg-hover));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .index-header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 8px;
+    }
+    .index-header h2 { font-size: 14px; font-weight: 600; }
+    .index-badge {
+      padding: 3px 8px;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--profit);
+      border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+    }
+    .index-value {
+      font-size: 26px; font-weight: 700;
+      font-family: 'SF Mono', monospace;
+      margin-bottom: 4px;
+    }
+    .index-label { font-size: 12px; color: var(--text-muted); }
+    
+    /* Section */
+    .section { margin-bottom: 24px; }
+    .section-header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 12px;
+    }
+    .section-header h2 { font-size: 16px; font-weight: 600; }
+    
+    /* Stock Grid */
+    .stock-grid { display: flex; flex-direction: column; gap: 10px; }
+    
+    .stock-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-decoration: none; color: var(--text);
+      transition: all 0.2s;
+    }
+    .stock-card:hover, .stock-card:active {
+      background: var(--bg-hover);
+      border-color: var(--border-hover);
+    }
+    
+    .stock-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--accent), #ff6b35);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 16px; color: white;
+      flex-shrink: 0;
+    }
+    
+    .stock-info { flex: 1; min-width: 0; }
+    .stock-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .stock-label { font-size: 11px; color: var(--text-muted); }
+    
+    .stock-price-col { text-align: right; }
+    .stock-price {
+      font-size: 16px; font-weight: 700;
+      font-family: 'SF Mono', monospace;
+      margin-bottom: 2px;
+    }
+    .stock-change {
+      font-size: 12px; font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .stock-change.up { background: rgba(16, 185, 129, 0.2); color: var(--profit); }
+    .stock-change.down { background: rgba(239, 68, 68, 0.2); color: var(--loss); }
+    
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 10px 0;
+      display: flex; justify-content: center; gap: 32px;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item span:first-child { font-size: 20px; }
+  </style>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <a href="page.html" class="back-btn">← Home</a>
+      <h1>Market</h1>
+      <div class="header-status">
+        <div class="status-dot"></div>
+        <span>Live</span>
       </div>
-      <section class="trending-section">
-        <h2>Trending Subreddits</h2>
-        <div id="trending-grid" class="subreddit-grid">
-          <!-- Will be populated by JavaScript -->
-        </div>
-      </section>
+    </header>
 
-      <section class="sector-section">
-        <div class="sector-header">
-          <h2>Hot Sector: Tech</h2>
-          <a href="#" class="view-all">View All →</a>
-        </div>
-        <div id="tech-grid" class="subreddit-grid">
-          <!-- Will be populated by JavaScript -->
-        </div>
-      </section>
+    <!-- Market Index -->
+    <div class="market-index">
+      <div class="index-header">
+        <h2>KARMA 500</h2>
+        <span class="index-badge">+2.4%</span>
+      </div>
+      <div class="index-value">$1,247.32</div>
+      <div class="index-label">Market Index • Live prices</div>
     </div>
 
-    <nav class="bottom-nav">
-      <a href="page.html" class="nav-item">
-        <span>Home</span>
-      </a>
-      <a href="market.html" class="nav-item">
-        <span>Market</span>
-      </a>
-      <a href="portfolio.html" class="nav-item">
-        <span>Portfolio</span>
-      </a>
-    </nav>
-  </body>
+    <!-- Trending Section -->
+    <section class="section">
+      <div class="section-header">
+        <span>🔥</span>
+        <h2>Trending Now</h2>
+      </div>
+      <div id="trending-grid" class="stock-grid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- Tech Section -->
+    <section class="section">
+      <div class="section-header">
+        <span>💻</span>
+        <h2>Tech & Finance</h2>
+      </div>
+      <div id="tech-grid" class="stock-grid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="page.html" class="nav-item">
+      <span>🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="market.html" class="nav-item active">
+      <span>📈</span>
+      <span>Market</span>
+    </a>
+    <a href="portfolio.html" class="nav-item">
+      <span>💼</span>
+      <span>Portfolio</span>
+    </a>
+  </nav>
+</body>
 </html>

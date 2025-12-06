@@ -1,82 +1,395 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Trading - Karma Street</title>
-    <script src="chart.js" defer></script>
-    <script src="script.js" defer></script>
-  </head>
-  <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f0f2f5;">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 16px;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="background: #ff4500; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">K</div>
-        <span style="font-size: 20px; font-weight: 600;">Karma Street</span>
-      </div>
-      <a href="page.html" style="text-decoration: none; color: #1a1a1b; font-size: 16px;">← Home</a>
-    </div>
-  
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
-      
-      
-      <div class="trading-header" style="padding: 24px; margin-bottom: 24px; background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <div style="display: flex; align-items: center; gap: 16px;">
-          <div id="subreddit-icon" style="width: 48px; height: 48px; background: #ff4500; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; font-weight: 600;"></div>
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <div style="display: flex; align-items: center;">
-              <span style="font-size: 28px; color: #1a1a1b; font-weight: 600;">r/</span>
-              <input list="subreddit-list" id="subreddit" placeholder="Select subreddit" 
-                     style="font-size: 28px; color: #1a1a1b; font-weight: 600; border: none; outline: none; background: transparent; padding: 0; margin: 0; width: auto;" />
-              <datalist id="subreddit-list"></datalist>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span id="current-price" style="font-size: 24px; font-weight: 600; color: #1a1a1b;"></span>
-              <span id="price-change" style="padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: 500;"></span>
-            </div>
-          </div>
-        </div>
-        <p id="message" style="margin: 16px 0 0 0; color: #666666; font-size: 15px;">Connecting to Karma Street...</p>
-      </div>
-
-      <div id="stock-info" style="padding: 24px; background: white; border-radius: 12px; margin: 24px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"></div>
-      
-      <div id="chart-container" style="height: 400px; background: #131722; border-radius: 12px; margin: 24px 0; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
-          <div style="position: absolute; left: 0; top: 10px; padding: 0 20px; width: 100%; display: flex; justify-content: space-between; align-items: center;">
-
-          </div>
-        </div>
-      </div>
-
-      <div class="trading-controls" style="padding: 24px; background: white; border-radius: 12px; margin: 24px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trade - Karma Street</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     
-        <div class="form-group" style="margin-bottom: 20px;">
-          <label for="amount" style="display: block; margin-bottom: 10px; color: #1a1a1b; font-weight: 600; font-size: 15px;">Amount:</label>
-          <input type="number" id="amount" placeholder="Enter amount" min="1" 
-                 style="width: 100%; padding: 12px 16px; border: 2px solid #e6e7e8; border-radius: 8px; font-size: 15px; box-sizing: border-box; transition: all 0.2s ease; outline: none;" />
-        </div>
-        <div class="action-buttons" style="display: flex; gap: 16px; margin-top: 24px;">
-          <button id="buyStock" style="flex: 1; padding: 14px; border: none; border-radius: 8px; background: #00c853; color: white; font-weight: 600; cursor: pointer; font-size: 16px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,200,83,0.2);">Buy Stock</button>
-          <button id="sellStock" style="flex: 1; padding: 14px; border: none; border-radius: 8px; background: #ff3d00; color: white; font-weight: 600; cursor: pointer; font-size: 16px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(255,61,0,0.2);">Sell Stock</button>
-        </div>
+    :root {
+      --bg-primary: #09090b;
+      --bg-card: #111114;
+      --bg-hover: #18181b;
+      --border: #27272a;
+      --text: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #ff4500;
+      --profit: #10b981;
+      --loss: #ef4444;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 70px;
+    }
+    
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+    
+    /* Header */
+    .header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .back-btn {
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .header-status {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px; color: var(--text-secondary);
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      background: var(--profit);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    /* Stock Header */
+    .stock-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 16px;
+    }
+    .stock-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--accent), #ff6b35);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 22px; color: white;
+    }
+    .stock-title { flex: 1; }
+    .stock-name-row {
+      display: flex; align-items: center; gap: 4px;
+      margin-bottom: 4px;
+    }
+    .stock-name-row span { font-size: 20px; font-weight: 700; }
+    .stock-name-input {
+      background: transparent; border: none; outline: none;
+      font-size: 20px; font-weight: 700; color: var(--text);
+      width: 150px;
+    }
+    .price-row { display: flex; align-items: center; gap: 10px; }
+    #current-price {
+      font-size: 26px; font-weight: 700;
+      font-family: 'SF Mono', monospace;
+    }
+    #price-change {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 13px; font-weight: 600;
+    }
+    .price-up { background: rgba(16, 185, 129, 0.2); color: var(--profit); }
+    .price-down { background: rgba(239, 68, 68, 0.2); color: var(--loss); }
+    
+    #message { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+    
+    /* Chart */
+    #chart-container {
+      height: 200px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Metrics */
+    .metrics {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      margin-bottom: 16px;
+    }
+    .metric {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    .metric-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+    .metric-value {
+      font-size: 16px; font-weight: 700;
+      font-family: 'SF Mono', monospace;
+    }
+    
+    /* Trade Panel */
+    .trade-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .panel-header h3 { font-size: 15px; font-weight: 600; }
+    .balance { font-size: 13px; color: var(--text-secondary); }
+    .balance span { color: var(--text); font-weight: 600; font-family: 'SF Mono', monospace; }
+    
+    .input-group { margin-bottom: 12px; }
+    .input-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+    .input-field {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 16px;
+      font-family: 'SF Mono', monospace;
+    }
+    .input-field:focus { outline: none; border-color: var(--accent); }
+    
+    .quick-amounts {
+      display: flex; gap: 8px;
+      margin-bottom: 12px;
+    }
+    .quick-btn {
+      flex: 1;
+      padding: 10px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+    }
+    .quick-btn:active { background: var(--border); }
+    
+    .order-summary {
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .order-row {
+      display: flex; justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .order-row:last-child { margin-bottom: 0; }
+    .order-row span:first-child { color: var(--text-muted); }
+    .order-row span:last-child { font-family: 'SF Mono', monospace; }
+    .order-total {
+      border-top: 1px solid var(--border);
+      padding-top: 8px; margin-top: 8px;
+      font-weight: 600;
+    }
+    
+    .trade-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn {
+      padding: 14px;
+      border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 700;
+      color: white;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:active { opacity: 0.8; }
+    .btn-buy { background: var(--profit); }
+    .btn-sell { background: var(--loss); }
+    
+    /* History */
+    .history {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .history h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .history-table { width: 100%; }
+    .history-table th {
+      text-align: left;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 500;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .history-table td {
+      padding: 8px 0;
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .history-empty {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #0c0c0f;
+      border-top: 1px solid var(--border);
+      padding: 10px 0;
+      display: flex; justify-content: center; gap: 32px;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item span:first-child { font-size: 20px; }
+  </style>
+  <script src="chart.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <a href="market.html" class="back-btn">← Market</a>
+      <div class="header-status">
+        <div class="status-dot"></div>
+        <span>Live</span>
       </div>
+    </header>
 
-      <div class="trade-history" style="padding: 24px; background: white; border-radius: 12px; margin: 24px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <h3 style="margin: 0 0 20px 0; font-size: 20px; color: #1a1a1b; font-weight: 600;">Trade History</h3>
-        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden;">
-          <thead style="background: #f8f9fa;">
-            <tr>
-              <th style="padding: 16px; text-align: left; border-bottom: 2px solid #e9ecef; font-weight: 600; color: #495057; font-size: 14px;">Type</th>
-              <th style="padding: 16px; text-align: left; border-bottom: 2px solid #e9ecef; font-weight: 600; color: #495057; font-size: 14px;">Subreddit</th>
-              <th style="padding: 16px; text-align: left; border-bottom: 2px solid #e9ecef; font-weight: 600; color: #495057; font-size: 14px;">Amount</th>
-              <th style="padding: 16px; text-align: left; border-bottom: 2px solid #e9ecef; font-weight: 600; color: #495057; font-size: 14px;">Price</th>
-              <th style="padding: 16px; text-align: left; border-bottom: 2px solid #e9ecef; font-weight: 600; color: #495057; font-size: 14px;">Total</th>
-              <th style="padding: 16px; text-align: left; border-bottom: 2px solid #e9ecef; font-weight: 600; color: #495057; font-size: 14px;">Time</th>
-            </tr>
-          </thead>
-          <tbody id="trade-history-data">
-            <!-- Trade history will be populated here -->
-          </tbody>
-        </table>
+    <!-- Stock Header -->
+    <div class="stock-header">
+      <div id="subreddit-icon" class="stock-icon">R</div>
+      <div class="stock-title">
+        <div class="stock-name-row">
+          <span>r/</span>
+          <input type="text" id="subreddit" class="stock-name-input" list="subreddit-list" placeholder="Select sub" />
+          <datalist id="subreddit-list"></datalist>
+        </div>
+        <div class="price-row">
+          <span id="current-price">$0.00</span>
+          <span id="price-change" class="price-up">+0.0%</span>
+        </div>
       </div>
     </div>
-  </body>
+    <p id="message">Connecting to Karma Street...</p>
+
+    <!-- Chart -->
+    <div id="chart-container"></div>
+
+    <!-- Metrics -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Karma</div>
+        <div id="metric-karma" class="metric-value">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Posts</div>
+        <div id="metric-posts" class="metric-value">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Comments</div>
+        <div id="metric-comments" class="metric-value">—</div>
+      </div>
+    </div>
+
+    <!-- Trade Panel -->
+    <div class="trade-panel">
+      <div class="panel-header">
+        <h3>Trade</h3>
+        <div class="balance">Balance: <span id="capital-display">$50,000</span></div>
+      </div>
+      
+      <div class="input-group">
+        <label class="input-label">Amount (shares)</label>
+        <input type="number" id="amount" class="input-field" min="1" placeholder="0" />
+      </div>
+      
+      <div class="quick-amounts">
+        <button class="quick-btn" onclick="setAmount(10)">10</button>
+        <button class="quick-btn" onclick="setAmount(25)">25</button>
+        <button class="quick-btn" onclick="setAmount(50)">50</button>
+        <button class="quick-btn" onclick="setAmount(100)">100</button>
+      </div>
+      
+      <div class="order-summary">
+        <div class="order-row">
+          <span>Price per share</span>
+          <span id="order-price">$0.00</span>
+        </div>
+        <div class="order-row">
+          <span>Quantity</span>
+          <span id="order-qty">0</span>
+        </div>
+        <div class="order-row order-total">
+          <span>Total</span>
+          <span id="order-total">$0.00</span>
+        </div>
+      </div>
+      
+      <div class="trade-buttons">
+        <button id="buyStock" class="btn btn-buy">Buy</button>
+        <button id="sellStock" class="btn btn-sell">Sell</button>
+      </div>
+    </div>
+
+    <!-- Trade History -->
+    <div class="history">
+      <h3>Recent Trades</h3>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Sub</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="trade-history-data">
+          <tr>
+            <td colspan="5" class="history-empty">No trades yet</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="page.html" class="nav-item">
+      <span>🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="market.html" class="nav-item">
+      <span>📈</span>
+      <span>Market</span>
+    </a>
+    <a href="portfolio.html" class="nav-item">
+      <span>💼</span>
+      <span>Portfolio</span>
+    </a>
+  </nav>
+
+  <script>
+    function setAmount(val) {
+      document.getElementById('amount').value = val;
+      document.getElementById('amount').dispatchEvent(new Event('input'));
+    }
+  </script>
+</body>
 </html>

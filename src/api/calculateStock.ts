@@ -1,113 +1,127 @@
 import { fetchSubredditData } from "./fetchData.js";
 
-// Use a scaling factor so that huge karma values are reduced to a realistic trading price.
-// For example, if karma is 3679, using SCALE=100 gives an initial price of ~36.79.
-const SCALE = 100;
+/**
+ * Realistic base prices for subreddits based on their typical size/activity
+ * Larger, more active subs = higher base price
+ */
+const BASE_PRICES: Record<string, number> = {
+  'wallstreetbets': 185.00,    // 14M+ members, very active
+  'cryptocurrency': 142.50,    // 7M+ members
+  'bitcoin': 210.00,           // 5M+ members, high value perception
+  'ethereum': 165.00,          // 2M+ members
+  'technology': 95.00,         // 15M+ members but less trading vibe
+  'programming': 72.50,        // 5M+ members
+  'investing': 88.00,          // 2M+ members
+  'personalfinance': 65.00,    // 18M+ members
+  'memes': 45.00,              // 22M+ but volatile/casual
+  'dankmemes': 38.50,          // 7M+ members
+};
 
+const DEFAULT_BASE_PRICE = 50.00;
+
+// Conservative factors for realistic movement
 const FACTORS = {
-  momentumDamper: 0.01,      // Reduced momentum effect
-  speculationLimit: 0.04,    // Cap speculative change to ±3% of prevPrice
-  decayStrength: 0.01,
-  priceChangeLimit: 0.03,    // Clamp maximum change per update to ±3%
-  baselineStability: 0.1     // Lower baseline stability so adjustments are more modest
+  maxChangePercent: 0.015,      // Max ±1.5% per update
+  momentumWeight: 0.002,        // Very small momentum effect
+  activityWeight: 0.001,        // Activity impact on price
+  decayRate: 0.005,             // Slow decay when inactive
+  noiseRange: 0.003,            // Small random noise ±0.3%
 };
 
 /**
  * calculateStockPrice
  * 
- * Computes a new price based on the subreddit data and the previous price.
- * If no stored price exists, the price is initialized to (karma / SCALE).
- * Changes are computed using weighted components (posts, comments, scaled karma,
- * engagement, and scaled volatility) and then damped and clamped.
+ * Computes realistic stock price based on subreddit activity.
+ * Prices move slowly and realistically, typically ±0.5-1.5% per update.
  */
 export async function calculateStockPrice(context: any, subreddit: string, prevPrice: number = 0) {
   const log = context.log || console;
 
-  // Fetch data from your existing fetchData (which returns absolute totals)
+  // Fetch live data from Reddit
   const data = await fetchSubredditData(context, subreddit);
   const newPosts = Number(data.newPosts) || 0;
   const comments = Number(data.comments) || 0;
   const karma = Number(data.karma) || 0;
-  const engagement = Number(data.engagement) || 0;
-  const volatility = Number(data.volatility) || 0;
-
-  // Scale down large values for a realistic trading range
-  const scaledKarma = karma / SCALE;          // e.g. 3679/100 ≈ 36.79
-  const scaledVolatility = volatility / SCALE;  // similarly scaled
-
-  // If no previous price is stored, initialize to the scaled karma (as a baseline)
-  const safePrevPrice = prevPrice > 0 ? Math.max(1, prevPrice) : Math.max(1, scaledKarma);
-
-  // Base price: use weighted components. We use the scaled values for karma and volatility.
-  const basePrice = 
-    0.3 * newPosts +
-    0.3 * comments +
-    0.2 * scaledKarma +
-    0.1 * engagement +
-    0.1 * scaledVolatility;
-
-  // Calculate the difference from the previous price.
-  const diff = basePrice - safePrevPrice;
-  const damped = diff * FACTORS.momentumDamper;
-
-  // Activity score (using posts, comments, and half of the scaled karma)
-  const activityScore = newPosts + comments + 0.5 * scaledKarma;
-  const momentum = activityScore * (safePrevPrice / 100) * FACTORS.baselineStability;
-
-  // Proposed new price before decay/clamping
-  let proposed = safePrevPrice + damped + momentum;
-
-  // Inject decay-based drift when subreddit is idle
-  if (newPosts === 0 && comments === 0 && engagement === 0) {
-    const idleDrift = (Math.random() - 0.5) * (volatility / (SCALE * 50)); // ~ ±0.78 max
-    proposed += idleDrift;
-    log.info(`[${subreddit}] Applied idle drift: ${idleDrift.toFixed(2)}`);
+  const subscribers = Number(data.subscribers) || 0;
+  
+  // Get base price for this subreddit
+  const basePrice = BASE_PRICES[subreddit.toLowerCase()] || DEFAULT_BASE_PRICE;
+  
+  // If no previous price, start at base price with small random offset
+  let currentPrice = prevPrice;
+  if (currentPrice <= 0) {
+    // Start within ±5% of base price for variety
+    const startOffset = (Math.random() - 0.5) * 0.1;
+    currentPrice = basePrice * (1 + startOffset);
+    
+    log.info(`[${subreddit}] Initialized price at $${currentPrice.toFixed(2)} (base: $${basePrice})`);
   }
 
+  // Calculate activity score (normalized 0-100)
+  const activityScore = Math.min(100, 
+    (newPosts * 2) + 
+    (comments * 0.5) + 
+    (karma / 1000)
+  );
 
-  // Apply decay: pull the price toward the base price
-  const decay = FACTORS.decayStrength * (safePrevPrice - basePrice);
-  proposed -= decay;
-
-  // Limit the speculative change to ±(speculationLimit × safePrevPrice)
-  const specCap = safePrevPrice * FACTORS.speculationLimit;
-  const overflow = proposed - safePrevPrice;
-  if (Math.abs(overflow) > specCap) {
-    proposed = safePrevPrice + Math.sign(overflow) * specCap;
+  // Determine price direction based on activity
+  // High activity = slight upward pressure, low = slight downward
+  const activityPressure = (activityScore - 30) * FACTORS.activityWeight;
+  
+  // Add small random market noise
+  const noise = (Math.random() - 0.5) * 2 * FACTORS.noiseRange * currentPrice;
+  
+  // Calculate raw change
+  let priceChange = (activityPressure * currentPrice) + noise;
+  
+  // Apply momentum from recent activity
+  if (newPosts > 5 || comments > 20) {
+    priceChange += currentPrice * FACTORS.momentumWeight;
+  }
+  
+  // Apply decay if very inactive
+  if (newPosts === 0 && comments === 0) {
+    priceChange -= currentPrice * FACTORS.decayRate;
   }
 
-  // Clamp final change to ±(priceChangeLimit × safePrevPrice)
-  const maxChange = safePrevPrice * FACTORS.priceChangeLimit;
-  if (proposed > safePrevPrice + maxChange) {
-    proposed = safePrevPrice + maxChange;
-  } else if (proposed < safePrevPrice - maxChange) {
-    proposed = safePrevPrice - maxChange;
-  }
+  // Clamp change to max percentage
+  const maxChange = currentPrice * FACTORS.maxChangePercent;
+  priceChange = Math.max(-maxChange, Math.min(maxChange, priceChange));
 
-  const finalPrice = Math.max(1, parseFloat(proposed.toFixed(2)));
+  // Calculate new price
+  let newPrice = currentPrice + priceChange;
+  
+  // Keep price within reasonable bounds (50% to 200% of base)
+  const minPrice = basePrice * 0.5;
+  const maxPrice = basePrice * 2.0;
+  newPrice = Math.max(minPrice, Math.min(maxPrice, newPrice));
+  
+  // Round to 2 decimal places
+  newPrice = Math.round(newPrice * 100) / 100;
 
-  log.info(`[${subreddit}] Price update: prev=${safePrevPrice.toFixed(2)}, base=${basePrice.toFixed(2)}, new=${finalPrice}`, {
-    newPosts,
+  const changePercent = ((newPrice - currentPrice) / currentPrice * 100).toFixed(2);
+  
+  log.info(`[${subreddit}] Price: $${currentPrice.toFixed(2)} → $${newPrice.toFixed(2)} (${changePercent}%)`, {
+    activity: activityScore.toFixed(1),
+    posts: newPosts,
     comments,
-    karma,
-    scaledKarma,
-    engagement,
-    volatility,
-    scaledVolatility,
-    diff: diff.toFixed(2),
-    damped: damped.toFixed(2),
-    momentum: momentum.toFixed(2),
-    decay: decay.toFixed(2),
-    specCap: specCap.toFixed(2),
-    maxChange: maxChange.toFixed(2)
+    karma
   });
 
   return {
-    price: finalPrice,
+    price: newPrice,
     posts: newPosts,
     comments,
     karma,
-    engagement,
-    volatility
+    engagement: data.engagement || 0,
+    volatility: data.volatility || 0,
+    subscribers
   };
+}
+
+/**
+ * Get the base/starting price for a subreddit
+ */
+export function getBasePrice(subreddit: string): number {
+  return BASE_PRICES[subreddit.toLowerCase()] || DEFAULT_BASE_PRICE;
 }

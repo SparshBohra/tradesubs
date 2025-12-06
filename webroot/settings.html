@@ -2,46 +2,324 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Settings | Karma Street</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Karma Street</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg-primary: #09090b;
+      --bg-card: #111114;
+      --bg-hover: #18181b;
+      --border: #27272a;
+      --text: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #ff4500;
+      --profit: #10b981;
+      --loss: #ef4444;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 70px;
+    }
+    
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+    
+    /* Header */
+    .header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .back-btn {
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    
+    /* Section */
+    .section { margin-bottom: 24px; }
+    .section-title {
+      font-size: 12px; font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+    .section-title.danger { color: var(--loss); }
+    
+    /* Settings Card */
+    .settings-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .settings-card.danger { border-color: rgba(239, 68, 68, 0.3); }
+    
+    .setting-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .setting-item:last-child { border-bottom: none; }
+    
+    .setting-info h4 { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+    .setting-info p { font-size: 11px; color: var(--text-muted); }
+    
+    .setting-value {
+      font-size: 14px;
+      font-family: 'SF Mono', monospace;
+      color: var(--text-secondary);
+    }
+    .setting-value.green { color: var(--profit); }
+    
+    .setting-badge {
+      padding: 4px 10px;
+      background: var(--bg-hover);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .toggle {
+      width: 44px; height: 24px;
+      background: var(--accent);
+      border-radius: 12px;
+      position: relative;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      right: 4px; top: 4px;
+      width: 16px; height: 16px;
+      background: white;
+      border-radius: 50%;
+    }
+    
+    .user-avatar {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), #ff6b35);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 14px;
+    }
+    
+    /* Danger Zone */
+    .danger-content {
+      padding: 16px;
+      display: flex; gap: 14px;
+    }
+    .danger-icon {
+      width: 44px; height: 44px;
+      background: rgba(239, 68, 68, 0.15);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .danger-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .danger-text p { font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-bottom: 12px; }
+    .btn-danger {
+      padding: 10px 16px;
+      background: var(--loss);
+      border: none; border-radius: 8px;
+      color: white;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-danger:active { opacity: 0.8; }
+    
+    /* About */
+    .about-content { padding: 16px; }
+    .about-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 12px;
+    }
+    .about-logo {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--accent), #ff6b35);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 20px;
+    }
+    .about-title h3 { font-size: 16px; font-weight: 700; }
+    .about-title p { font-size: 11px; color: var(--text-muted); }
+    .about-desc {
+      font-size: 12px; color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .about-meta {
+      display: flex; gap: 12px;
+      font-size: 11px; color: var(--text-muted);
+    }
+    
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #0c0c0f;
+      border-top: 1px solid var(--border);
+      padding: 10px 0;
+      display: flex; justify-content: center; gap: 32px;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+    .nav-item span:first-child { font-size: 20px; }
+  </style>
+  <script src="script.js" defer></script>
 </head>
-<body style="font-family: Arial, sans-serif; padding: 16px; background-color: #fff; color: #1a1a1a;">
-  <main class="settings-container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-      <div style="display: flex; align-items: center;">
-        <div style="width: 32px; height: 32px; background: #ff4500; color: #fff; font-weight: bold; font-size: 20px; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-right: 8px;">K</div>
-        <span style="font-size: 20px; font-weight: 600;">Karma Street</span>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <a href="page.html" class="back-btn">← Home</a>
+      <h1>Settings</h1>
+    </header>
+
+    <!-- Account Section -->
+    <section class="section">
+      <div class="section-title">Account</div>
+      <div class="settings-card">
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>Username</h4>
+            <p id="settings-username">Loading...</p>
+          </div>
+          <div class="user-avatar">U</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>Starting Capital</h4>
+            <p>Your initial Karma Dollars</p>
+          </div>
+          <div class="setting-value green">$50,000</div>
+        </div>
       </div>
-      <a href="page.html" style="text-decoration: none; color: #555; font-size: 16px;">← Home</a>
-    </div>
-
-    <section style="margin-bottom: 24px;">
-      <h2 style="font-size: 18px; margin-bottom: 8px;">Theme</h2>
-      <button id="toggle-theme" style="padding: 8px 16px; border: none; background: #eee; border-radius: 6px; cursor: pointer;">Toggle Dark Mode</button>
     </section>
 
-    <section style="margin-bottom: 24px;">
-      <h2 style="font-size: 18px; margin-bottom: 8px;">Notifications</h2>
-      <label style="font-size: 14px;">
-        <input type="checkbox" id="enable-notifications" style="margin-right: 6px;" />
-        Enable price alerts
-      </label>
+    <!-- Stats Section -->
+    <section class="section">
+      <div class="section-title">Game Stats</div>
+      <div class="settings-card">
+        <div class="setting-item">
+          <div class="setting-info"><h4>Current Balance</h4></div>
+          <div id="settings-balance" class="setting-value">$50,000</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info"><h4>Total Trades</h4></div>
+          <div id="settings-trades" class="setting-value">0</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info"><h4>Portfolio Value</h4></div>
+          <div id="settings-portfolio" class="setting-value">$0.00</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info"><h4>All-Time P&L</h4></div>
+          <div id="settings-pnl" class="setting-value green">+$0.00</div>
+        </div>
+      </div>
     </section>
 
-    <section style="margin-bottom: 24px;">
-      <h2 style="font-size: 18px; margin-bottom: 8px;">Account</h2>
-      <button id="reset-portfolio" style="padding: 8px 16px; border: none; background: #eee; border-radius: 6px; cursor: pointer;">Reset Portfolio</button>
+    <!-- Preferences Section -->
+    <section class="section">
+      <div class="section-title">Preferences</div>
+      <div class="settings-card">
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>Price Refresh</h4>
+            <p>How often prices update</p>
+          </div>
+          <div class="setting-badge">5 seconds</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>Dark Mode</h4>
+            <p>Always on for that trading vibe</p>
+          </div>
+          <div class="toggle"></div>
+        </div>
+      </div>
     </section>
-  </main>
+
+    <!-- Danger Zone -->
+    <section class="section">
+      <div class="section-title danger">Danger Zone</div>
+      <div class="settings-card danger">
+        <div class="danger-content">
+          <div class="danger-icon">⚠️</div>
+          <div class="danger-text">
+            <h4>Reset Game</h4>
+            <p>Reset capital to $50,000 and clear all portfolio holdings and trade history. This cannot be undone.</p>
+            <button id="reset-game" class="btn-danger">Reset Everything</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section">
+      <div class="section-title">About</div>
+      <div class="settings-card">
+        <div class="about-content">
+          <div class="about-header">
+            <div class="about-logo">K</div>
+            <div class="about-title">
+              <h3>Karma Street</h3>
+              <p>Reddit Stock Exchange</p>
+            </div>
+          </div>
+          <p class="about-desc">Trade subreddits like stocks. Prices move based on real Reddit activity — karma, posts, comments, and engagement.</p>
+          <div class="about-meta">
+            <span>Version 0.1.0</span>
+            <span>•</span>
+            <span>Built with Devvit</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="page.html" class="nav-item">
+      <span>🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="market.html" class="nav-item">
+      <span>📈</span>
+      <span>Market</span>
+    </a>
+    <a href="portfolio.html" class="nav-item">
+      <span>💼</span>
+      <span>Portfolio</span>
+    </a>
+  </nav>
 
   <script>
-    document.getElementById("toggle-theme").addEventListener("click", () => {
-      document.body.classList.toggle("dark-mode");
-    });
-
-    document.getElementById("reset-portfolio").addEventListener("click", () => {
-      localStorage.removeItem("portfolio");
-      alert("Portfolio reset!");
+    document.getElementById('reset-game')?.addEventListener('click', function() {
+      if (confirm('Are you sure? This will reset everything and cannot be undone.')) {
+        localStorage.clear();
+        alert('Game reset! Reload to start fresh.');
+        window.location.href = 'page.html';
+      }
     });
   </script>
 </body>
